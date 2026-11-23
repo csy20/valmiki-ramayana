@@ -1,6 +1,6 @@
 {
   "pipeline_version": "0.1.0",
-  "built_at": "2026-11-23T19:24:00Z",
+  "built_at": "2026-11-23T20:28:43Z",
   "sanskrit": {
     "site": "sa.wikisource.org",
     "sargas": 645,
@@ -711,7 +711,7 @@
   "hindi": {
     "model_id": "ai4bharat/indictrans2-indic-indic-dist-320M",
     "revision": "ffb7582b6d43791f1fb26b2153fc065f2e9ea575",
-    "hi_generated": 0,
+    "hi_generated": 143,
     "hi_verified": 0
   }
 }
