@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import { REPO_URL } from '../config';
+import { FEEDBACK_FORM_URL, REPO_URL } from '../config';
 import { getIndex, getProvenance } from '../lib/data';
 
 const index = getIndex();
@@ -72,10 +72,21 @@ const { totals } = index;
       <li>Ralph T. H. Griffith (1870) verse translation (public domain, excluded because its recension and canto numbering diverge from the Sanskrit Wikisource text while M. N. Dutt covers all seven Kāṇḍas)</li>
     </ul>
 
-    <h2>6. Corrections &amp; Takedown Requests</h2>
-    <ul>
-      <li><a href={`${REPO_URL}/issues/new?template=verse-correction.yml`} target="_blank" rel="noopener noreferrer">Submit a verse, OCR, or Hindi correction</a></li>
-      <li><a href={`${REPO_URL}/issues/new?template=copyright-takedown.yml`} target="_blank" rel="noopener noreferrer">Report a copyright or attribution concern</a></li>
-    </ul>
+    <h2 id="corrections">6. Corrections &amp; Feedback</h2>
+    <p>
+      If you notice an OCR error in M. N. Dutt's English prose, a typo in the Sanskrit or Hindi text, or an attribution concern, please note the Kāṇḍa, Sarga, and shloka number (for example, <code>1.1.12</code>) along with the passage that needs review.
+      {FEEDBACK_FORM_URL ? (
+        <> You can send it directly through our <a href={FEEDBACK_FORM_URL} target="_blank" rel="noopener noreferrer">reader feedback form</a>.</>
+      ) : (
+        <> A direct reader feedback form can be connected here via <code>FEEDBACK_FORM_URL</code> without requiring any developer account.</>
+      )}
+    </p>
+    <p class="text-sm text-[var(--muted)]">
+      <strong>For contributors:</strong> Source files, pull requests, and issue templates live in the{' '}
+      <a href={REPO_URL} target="_blank" rel="noopener noreferrer">GitHub repository</a>{' '}
+      (<a href={`${REPO_URL}/blob/main/CONTRIBUTING.md`} target="_blank" rel="noopener noreferrer">contributing guide</a>,{' '}
+      <a href={`${REPO_URL}/issues/new?template=verse-correction.yml`} target="_blank" rel="noopener noreferrer">verse correction template</a>, and{' '}
+      <a href={`${REPO_URL}/issues/new?template=copyright-takedown.yml`} target="_blank" rel="noopener noreferrer">copyright / takedown template</a>).
+    </p>
   </article>
 </Base>

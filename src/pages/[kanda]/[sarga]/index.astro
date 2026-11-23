@@ -3,7 +3,7 @@ import Base from '../../../layouts/Base.astro';
 import ReaderControls from '../../../components/ReaderControls.astro';
 import SargaNav from '../../../components/SargaNav.astro';
 import Verse from '../../../components/Verse.astro';
-import { REPO_URL } from '../../../config';
+import { FEEDBACK_FORM_URL } from '../../../config';
 import {
   formatEnSourceLabel,
   getIndex,
@@ -11,7 +11,7 @@ import {
   getSarga,
   intToDeva,
 } from '../../../lib/data';
-import { kandaUrl, padSarga, sargaUrl } from '../../../lib/url';
+import { kandaUrl, padSarga, sargaUrl, withBase } from '../../../lib/url';
 
 export function getStaticPaths() {
   const index = getIndex();
@@ -34,6 +34,9 @@ const hasHindi = doc.verses.some((v) => Boolean(v.hi));
 const allHiVerified = hasHindi && doc.verses.every((v) => v.hi_verified);
 const currentPath = sargaUrl(kanda.slug, sargaN);
 const lastTitle = `${kanda.name_iast} · Sarga ${sargaN}`;
+const feedbackHref = FEEDBACK_FORM_URL
+  ? `${FEEDBACK_FORM_URL}${FEEDBACK_FORM_URL.includes('?') ? '&' : '?'}sarga=${kanda.n}.${sargaN}`
+  : `${withBase('sources/')}#corrections`;
 ---
 <Base title={`${kanda.name_iast} ${kanda.n}.${sargaN}`}>
   <div class="mb-4 border-b border-[var(--border)] pb-4">
@@ -98,22 +101,21 @@ const lastTitle = `${kanda.name_iast} · Sarga ${sargaN}`;
 
   <div class="mt-8 border-t border-[var(--border)] pt-4">
     <SargaNav kandaSlug={kanda.slug} kandaName={kanda.name_iast} prev={prev} next={next} position="bottom" />
+    <p class="mt-4 text-center text-xs text-[var(--muted)]">
+      Spot a typo in this sarga?{' '}
+      <a
+        href={feedbackHref}
+        target={FEEDBACK_FORM_URL ? '_blank' : undefined}
+        rel={FEEDBACK_FORM_URL ? 'noopener noreferrer' : undefined}
+      >
+        Let us know
+      </a>.
+    </p>
   </div>
 
-  <script is:inline define:vars={{ SLUG: kanda.slug, KANDA: kanda.n, SARGA: sargaN, TITLE: lastTitle, PATH: currentPath, REPO: REPO_URL }}>
+  <script is:inline define:vars={{ SLUG: kanda.slug, SARGA: sargaN, TITLE: lastTitle, PATH: currentPath }}>
     try {
       localStorage.setItem('vr:last', JSON.stringify({ slug: SLUG, sarga: SARGA, title: TITLE, path: PATH }));
     } catch {}
-    document.querySelectorAll('#verses > article.v').forEach(function (el) {
-      var n = el.id.slice(1);
-      var a = document.createElement('a');
-      a.className = 'rp';
-      a.textContent = 'report';
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      var ref = KANDA + '.' + SARGA + '.' + n;
-      a.href = REPO + '/issues/new?template=verse-correction.yml&title=Correction:+' + ref + '&verse=' + ref;
-      el.insertBefore(a, el.firstChild ? el.firstChild.nextSibling : null);
-    });
   </script>
 </Base>
