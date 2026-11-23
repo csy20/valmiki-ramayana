@@ -98,3 +98,21 @@ def test_dp_alignment():
     assert dropped == [2]
     toks = extract_proper_tokens("Rama went with Lakshmana and Sugriva.")
     assert score_dutt_vs_sarga(toks, fold_for_match("rāmaḥ lakṣmaṇaḥ sugrīvaḥ")) == 1.0
+
+
+def test_hindi_helpers():
+    from vr.build import hindi_cache_key
+    from vr.hindi import clean_hindi_output, is_suspect_hindi
+
+    k1, n1 = hindi_cache_key("रामः वनं गच्छति ।\nसीता च ॥")
+    k2, n2 = hindi_cache_key("रामः वनं गच्छति सीता च")
+    assert k1 == k2
+    assert n1 == "रामः वनं गच्छति सीता च"
+
+    assert clean_hindi_output("  राम वन गए. ") == "राम वन गए ।".replace("गए ।", "गए ।")
+    assert clean_hindi_output("राम वन गए") == "राम वन गए ।"
+    assert clean_hindi_output("राम वन गए ।") == "राम वन गए ।"
+
+    assert not is_suspect_hindi("तपस्वी वाल्मीकि ने नारद से पूछा ।", n1)
+    assert is_suspect_hindi("", n1)
+    assert is_suspect_hindi("एक दो तीन एक दो तीन एक दो तीन एक दो तीन", n1)

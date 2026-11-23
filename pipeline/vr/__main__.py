@@ -22,6 +22,8 @@ def main(argv: list[str] | None = None) -> int:
     p_hi.add_argument("--kanda", help="Filter by kanda slug (e.g. 01-bala)")
     p_hi.add_argument("--limit", type=int, help="Max uncached verses to process")
     p_hi.add_argument("--beams", type=int, default=4, help="Beam width (default 4)")
+    p_hi.add_argument("--batch-size", type=int, default=32, help="Batch size (default 32)")
+    p_hi.add_argument("--quantize", action="store_true", help="Use dynamic int8 CPU quantization")
 
     sub.add_parser("build", help="Build data/ JSON files")
 
@@ -40,7 +42,13 @@ def main(argv: list[str] | None = None) -> int:
         parse_en()
     elif args.cmd == "hindi":
         from .hindi import run_hindi
-        run_hindi(kanda=args.kanda, limit=args.limit, num_beams=args.beams)
+        run_hindi(
+            kanda=args.kanda,
+            limit=args.limit,
+            num_beams=args.beams,
+            batch_size=args.batch_size,
+            quantize=args.quantize,
+        )
     elif args.cmd == "build":
         from .build import build_data
         build_data()
