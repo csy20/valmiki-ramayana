@@ -1,0 +1,193 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+@import "@fontsource-variable/source-serif-4";
+@import "@fontsource-variable/noto-serif-devanagari";
+
+@theme {
+  --font-serif: "Source Serif 4 Variable", Georgia, Cambria, "Times New Roman", serif;
+  --font-deva: "Noto Serif Devanagari Variable", "Noto Serif Devanagari", serif;
+}
+
+@view-transition {
+  navigation: auto;
+}
+
+:root,
+html.theme-paper {
+  --bg: #fbf8f1;
+  --surface: #f4eee1;
+  --ink: #1f1a14;
+  --muted: #5d5041;
+  --border: #dfd3bd;
+  --accent: #a3471a;
+  --accent-ink: #ffffff;
+  --scale: 1;
+}
+
+html.theme-sepia {
+  --bg: #f3ead8;
+  --surface: #e9dcc2;
+  --ink: #2a2015;
+  --muted: #62513d;
+  --border: #d4c2a1;
+  --accent: #8f3b14;
+  --accent-ink: #ffffff;
+}
+
+html.theme-dark {
+  --bg: #14110d;
+  --surface: #1e1913;
+  --ink: #e9e2d4;
+  --muted: #b5a894;
+  --border: #362e23;
+  --accent: #e07a47;
+  --accent-ink: #14110d;
+}
+
+html.size-sm {
+  --scale: 0.92;
+}
+html.size-md {
+  --scale: 1;
+}
+html.size-lg {
+  --scale: 1.14;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: calc(1.0625rem * var(--scale));
+  line-height: 1.65;
+  margin: 0;
+  min-height: 100vh;
+}
+
+a {
+  color: var(--accent);
+  text-underline-offset: 0.18em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  padding: 0.5rem 1rem;
+  background: var(--accent);
+  color: var(--accent-ink);
+  z-index: 50;
+}
+.skip-link:focus {
+  left: 0.75rem;
+  top: 0.75rem;
+}
+
+.measure {
+  max-width: 68ch;
+}
+
+.deva {
+  font-family: var(--font-deva);
+}
+
+/* Reader layer toggles (no JS re-render) */
+html.hide-sa .sa {
+  display: none;
+}
+html.hide-iast .ia {
+  display: none;
+}
+html.hide-hi .hi,
+html.hide-hi .hi-notice {
+  display: none;
+}
+html.hide-en #en {
+  display: none;
+}
+
+/* Verse card styling - lean class names for HTML size budget */
+.v {
+  position: relative;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.v:last-child {
+  border-bottom: 0;
+}
+.vn {
+  display: inline-block;
+  margin-bottom: 0.3rem;
+  font-size: 0.85em;
+  font-weight: 600;
+  color: var(--muted);
+  text-decoration: none;
+}
+.vn:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.rp {
+  position: absolute;
+  right: 0;
+  top: 1rem;
+  font-size: 0.75em;
+  color: var(--muted);
+  text-decoration: none;
+  opacity: 0.75;
+}
+.rp:hover {
+  opacity: 1;
+  color: var(--accent);
+  text-decoration: underline;
+}
+.sa {
+  font-family: var(--font-deva);
+  font-size: 1.24em;
+  line-height: 1.9;
+  margin: 0.15rem 0 0.45rem;
+}
+.ia {
+  font-style: italic;
+  color: var(--muted);
+  font-size: 0.96em;
+  line-height: 1.65;
+  margin: 0.2rem 0 0.45rem;
+}
+.hi {
+  font-family: var(--font-deva);
+  font-size: 1.04em;
+  line-height: 1.8;
+  margin: 0.3rem 0 0.1rem;
+}
+
+/* 2-column split on xl when both verses and English are shown */
+.reader-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2.5rem;
+}
+@media (min-width: 1280px) {
+  .reader-grid {
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+    align-items: start;
+  }
+  html.hide-en .reader-grid,
+  html.hide-sa.hide-iast.hide-hi .reader-grid {
+    grid-template-columns: minmax(0, 68ch);
+  }
+}
+
+.prose-reader {
+  --tw-prose-body: var(--ink);
+  --tw-prose-headings: var(--ink);
+  --tw-prose-links: var(--accent);
+  --tw-prose-bold: var(--ink);
+  --tw-prose-quotes: var(--muted);
+  --tw-prose-hr: var(--border);
+}

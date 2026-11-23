@@ -1,0 +1,48 @@
+---
+import type { SargaNavTarget } from '../lib/data';
+import { kandaUrl, sargaUrl } from '../lib/url';
+
+interface Props {
+  kandaSlug: string;
+  kandaName: string;
+  prev: SargaNavTarget | null;
+  next: SargaNavTarget | null;
+  position: 'top' | 'bottom';
+}
+
+const { kandaSlug, kandaName, prev, next, position } = Astro.props;
+---
+<nav aria-label={`Sarga navigation (${position})`} class="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
+  <div class="min-w-0">
+    {prev ? (
+      <a
+        href={sargaUrl(prev.slug, prev.sarga)}
+        data-nav-prev={position === 'top' ? 'true' : undefined}
+        class="inline-flex items-center gap-1.5 rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 font-medium no-underline hover:border-[var(--accent)]"
+      >
+        <span>&larr;</span>
+        <span>{prev.slug === kandaSlug ? `Sarga ${prev.sarga}` : `${prev.kandaName} ${prev.sarga}`}</span>
+      </a>
+    ) : (
+      <span class="text-[var(--muted)]">Beginning</span>
+    )}
+  </div>
+  <a href={kandaUrl(kandaSlug)} class="font-medium no-underline hover:underline">
+    {kandaName} Index
+  </a>
+  <div class="min-w-0">
+    {next ? (
+      <a
+        href={sargaUrl(next.slug, next.sarga)}
+        data-nav-next={position === 'top' ? 'true' : undefined}
+        data-astro-prefetch="load"
+        class="inline-flex items-center gap-1.5 rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 font-medium no-underline hover:border-[var(--accent)]"
+      >
+        <span>{next.slug === kandaSlug ? `Sarga ${next.sarga}` : `${next.kandaName} ${next.sarga}`}</span>
+        <span>&rarr;</span>
+      </a>
+    ) : (
+      <span class="text-[var(--muted)]">End</span>
+    )}
+  </div>
+</nav>

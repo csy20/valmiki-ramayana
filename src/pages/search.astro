@@ -1,0 +1,179 @@
+---
+import Base from '../layouts/Base.astro';
+import { getIndex } from '../lib/data';
+import { withBase } from '../lib/url';
+
+const index = getIndex();
+const kandaFilters = index.kandas.map((k) => ({
+  label: `${k.name_iast} (${k.name_en})`,
+  value: k.name_en.replace(/\s+Kanda$/, ''),
+}));
+const baseUrl = withBase('');
+---
+<Base title="Search">
+  <section class="measure">
+    <h1 class="text-3xl font-bold tracking-tight">Search the Rāmāyaṇa</h1>
+    <p class="mt-2 text-sm text-[var(--muted)]">
+      Client-side static search across all {index.totals.verses.toLocaleString()} shlokas (Devanagari, IAST, ASCII-folded IAST, Hindi drafts) and M. N. Dutt English prose. Press <kbd class="rounded border border-[var(--border)] px-1.5 py-0.5 text-xs">/</kbd> anywhere to jump here.
+    </p>
+
+    <form id="search-form" class="mt-6 flex flex-col gap-3 sm:flex-row" onsubmit="return false;">
+      <label class="sr-only" for="search-q">Search query</label>
+      <input
+        id="search-q"
+        type="search"
+        placeholder="Search राम, rāma, rama, Ayodhya, Kaikeyi…"
+        autocomplete="off"
+        class="flex-1 rounded-md border border-[var(--border)] bg-[var(--bg)] px-3.5 py-2 text-base text-[var(--ink)] placeholder:text-[var(--muted)]"
+      />
+      <label class="sr-only" for="search-kanda">Filter by Kāṇḍa</label>
+      <select
+        id="search-kanda"
+        class="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--ink)]"
+      >
+        <option value="">All Kāṇḍas</option>
+        {kandaFilters.map((kf) => (
+          <option value={kf.value}>{kf.label}</option>
+        ))}
+      </select>
+    </form>
+
+    <p id="search-status" class="mt-4 text-sm text-[var(--muted)]">Type a word or phrase to search.</p>
+    <ol id="search-results" class="mt-4 divide-y divide-[var(--border)]"></ol>
+    <button
+      id="search-more"
+      type="button"
+      class="mt-6 hidden cursor-pointer rounded border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-medium hover:border-[var(--accent)]"
+    >
+      Load more results
+    </button>
+  </section>
+
+  <script is:inline define:vars={{ BASE: baseUrl }}>
+    (function () {
+      var inputEl = document.getElementById('search-q');
+      var filterEl = document.getElementById('search-kanda');
+      var statusEl = document.getElementById('search-status');
+      var listEl = document.getElementById('search-results');
+      var moreBtn = document.getElementById('search-more');
+
+      var pagefind = null;
+      var activeResults = [];
+      var shownCount = 0;
+      var PAGE_SIZE = 20;
+      var seq = 0;
+
+      function fold(s) {
+        return s
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/ṛ/gi, 'r')
+          .replace(/ṝ/gi, 'r')
+          .replace(/ḷ/gi, 'l')
+          .toLowerCase();
+      }
+
+      async function ensurePagefind() {
+        if (pagefind) return pagefind;
+        var mod = await import(BASE + 'pagefind/pagefind.js');
+        await mod.options({ baseUrl: BASE });
+        pagefind = mod;
+        return pagefind;
+      }
+
+      function normalizeHref(rawUrl) {
+        var clean = String(rawUrl || '');
+        if (clean.startsWith(BASE)) return clean;
+        return BASE + clean.replace(/^\/+/, '');
+      }
+
+      async function renderNextChunk() {
+        var slice = activeResults.slice(shownCount, shownCount + PAGE_SIZE);
+        var loaded = await Promise.all(slice.map(function (r) { return r.data(); }));
+        loaded.forEach(function (item) {
+          var li = document.createElement('li');
+          li.className = 'py-3.5';
+          var a = document.createElement('a');
+          a.href = normalizeHref(item.url);
+          a.className = 'font-semibold text-[var(--accent)] hover:underline';
+          a.textContent = (item.meta && item.meta.title) || item.url;
+          var p = document.createElement('p');
+          p.className = 'mt-1 text-sm text-[var(--muted)]';
+          p.innerHTML = item.excerpt || '';
+          li.appendChild(a);
+          li.appendChild(p);
+          listEl.appendChild(li);
+        });
+        shownCount += slice.length;
+        if (shownCount < activeResults.length) {
+          moreBtn.classList.remove('hidden');
+          moreBtn.textContent = 'Load more (' + (activeResults.length - shownCount) + ' remaining)';
+        } else {
+          moreBtn.classList.add('hidden');
+        }
+      }
+
+      async function runSearch() {
+        var q = inputEl.value.trim();
+        var kanda = filterEl.value;
+        var mySeq = ++seq;
+
+        listEl.innerHTML = '';
+        moreBtn.classList.add('hidden');
+        activeResults = [];
+        shownCount = 0;
+
+        if (!q) {
+          statusEl.textContent = 'Type a word or phrase to search.';
+          return;
+        }
+
+        statusEl.textContent = 'Searching…';
+        try {
+          var pf = await ensurePagefind();
+          var opts = kanda ? { filters: { kanda: [kanda] } } : {};
+          var folded = fold(q);
+          var searches = [pf.debouncedSearch(q, opts, 180)];
+          if (folded && folded !== q) {
+            searches.push(pf.search(folded, opts));
+          }
+          var responses = await Promise.all(searches);
+          if (mySeq !== seq) return;
+          if (!responses[0]) return; // debounced out
+
+          var merged = [];
+          var seen = new Set();
+          responses.forEach(function (res) {
+            if (!res || !res.results) return;
+            res.results.forEach(function (r) {
+              if (!seen.has(r.id)) {
+                seen.add(r.id);
+                merged.push(r);
+              }
+            });
+          });
+
+          activeResults = merged;
+          if (activeResults.length === 0) {
+            statusEl.textContent = 'No matches for "' + q + '".';
+            return;
+          }
+          statusEl.textContent = activeResults.length + ' result' + (activeResults.length === 1 ? '' : 's') + ' for "' + q + '"';
+          await renderNextChunk();
+        } catch (err) {
+          statusEl.textContent = 'Search index is built during production build (`npm run build`).';
+        }
+      }
+
+      inputEl.addEventListener('input', runSearch);
+      filterEl.addEventListener('change', runSearch);
+      moreBtn.addEventListener('click', renderNextChunk);
+
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('q')) {
+        inputEl.value = params.get('q');
+        runSearch();
+      }
+    })();
+  </script>
+</Base>

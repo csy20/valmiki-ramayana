@@ -1,0 +1,32 @@
+name: Copyright / Takedown Request
+description: Report any suspected copyrighted material or attribution issue for immediate review.
+title: "Takedown / Attribution: "
+labels: ["legal"]
+body:
+  - type: input
+    id: claimant
+    attributes:
+      label: Claimant Name / Organization
+    validations:
+      required: true
+  - type: textarea
+    id: work
+    attributes:
+      label: Copyrighted Work Identified
+      description: Title, author/translator, publisher, and publication details of the work at issue.
+    validations:
+      required: true
+  - type: textarea
+    id: urls
+    attributes:
+      label: Affected URL(s) and Verse Reference(s)
+      description: Exact page URLs and data file paths (e.g. data/01-bala/001.json).
+    validations:
+      required: true
+  - type: textarea
+    id: statement
+    attributes:
+      label: Statement
+      description: Describe the issue and your authority as rights holder or authorized agent.
+    validations:
+      required: true

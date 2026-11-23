@@ -1,0 +1,76 @@
+---
+import Base from '../layouts/Base.astro';
+import { getIndex } from '../lib/data';
+import { kandaUrl, withBase } from '../lib/url';
+
+const index = getIndex();
+const { totals, kandas } = index;
+const baseUrl = withBase('');
+---
+<Base title="Home">
+  <section class="measure mb-10">
+    <h1 class="text-3xl font-bold tracking-tight sm:text-4xl">
+      <span class="deva block text-2xl font-semibold text-[var(--accent)] sm:text-3xl">श्रीमद्वाल्मीकिरामायणम्</span>
+      Vālmīki Rāmāyaṇa
+    </h1>
+    <p class="mt-4 text-base leading-relaxed text-[var(--muted)]">
+      A zero-image, offline-capable static edition of the complete Vālmīki Rāmāyaṇa in Sanskrit (Devanagari &amp; IAST), public-domain English prose (M. N. Dutt, 1891–1894), and CC0 Hindi machine drafts generated from the Sanskrit shlokas.
+    </p>
+    <p class="mt-3 text-sm font-medium text-[var(--muted)]">
+      {totals.sargas.toLocaleString()} sargas &middot; {totals.verses.toLocaleString()} shlokas &middot; {totals.en_sargas.toLocaleString()} sargas with English prose &middot; {totals.hi_generated.toLocaleString()} Hindi drafts ({totals.hi_verified.toLocaleString()} verified)
+    </p>
+    <div id="continue-box" class="mt-6 hidden rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm">
+      <span class="text-[var(--muted)]">Continue reading: </span>
+      <a id="continue-link" href={baseUrl} class="font-semibold"></a>
+    </div>
+    <div class="mt-6 flex flex-wrap gap-3 text-sm">
+      <a href={withBase('01-bala/001/')} class="rounded bg-[var(--accent)] px-4 py-2 font-semibold text-[var(--accent-ink)] no-underline hover:opacity-90">
+        Begin at Bālakāṇḍa 1.1
+      </a>
+      <a href={withBase('search/')} class="rounded border border-[var(--border)] bg-[var(--surface)] px-4 py-2 font-medium text-[var(--ink)] no-underline hover:border-[var(--accent)]">
+        Search verses
+      </a>
+      <a href={withBase('offline/')} class="rounded border border-[var(--border)] bg-[var(--surface)] px-4 py-2 font-medium text-[var(--ink)] no-underline hover:border-[var(--accent)]">
+        Offline library
+      </a>
+    </div>
+  </section>
+
+  <section aria-labelledby="kandas-heading">
+    <h2 id="kandas-heading" class="mb-4 text-xl font-semibold">Seven Kāṇḍas</h2>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {kandas.map((k) => (
+        <a
+          href={kandaUrl(k.slug)}
+          class="block rounded-lg border border-[var(--border)] bg-[var(--surface)]/60 p-5 no-underline transition-colors hover:border-[var(--accent)] hover:bg-[var(--surface)]"
+        >
+          <div class="flex items-baseline justify-between gap-2">
+            <span class="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">Kāṇḍa {k.n}</span>
+            <span class="text-xs text-[var(--muted)]">{k.sargas.length} sargas &middot; {k.verse_count.toLocaleString()} shlokas</span>
+          </div>
+          <p class="deva mt-1.5 text-xl font-semibold text-[var(--accent)]">{k.name_sa}</p>
+          <p class="mt-0.5 text-lg font-semibold text-[var(--ink)]">{k.name_iast}</p>
+          <p class="text-sm text-[var(--muted)]">{k.name_en}</p>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <script is:inline>
+    (function () {
+      try {
+        var raw = localStorage.getItem('vr:last');
+        if (!raw) return;
+        var last = JSON.parse(raw);
+        if (!last || !last.path || !last.title) return;
+        var box = document.getElementById('continue-box');
+        var link = document.getElementById('continue-link');
+        if (box && link) {
+          link.setAttribute('href', last.path);
+          link.textContent = last.title;
+          box.classList.remove('hidden');
+        }
+      } catch {}
+    })();
+  </script>
+</Base>

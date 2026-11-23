@@ -1,0 +1,119 @@
+---
+import Base from '../../../layouts/Base.astro';
+import ReaderControls from '../../../components/ReaderControls.astro';
+import SargaNav from '../../../components/SargaNav.astro';
+import Verse from '../../../components/Verse.astro';
+import { REPO_URL } from '../../../config';
+import {
+  formatEnSourceLabel,
+  getIndex,
+  getPrevNextSarga,
+  getSarga,
+  intToDeva,
+} from '../../../lib/data';
+import { kandaUrl, padSarga, sargaUrl } from '../../../lib/url';
+
+export function getStaticPaths() {
+  const index = getIndex();
+  const paths = [];
+  for (const kanda of index.kandas) {
+    for (const s of kanda.sargas) {
+      paths.push({
+        params: { kanda: kanda.slug, sarga: padSarga(s.n) },
+        props: { kanda, sargaN: s.n },
+      });
+    }
+  }
+  return paths;
+}
+
+const { kanda, sargaN } = Astro.props;
+const doc = getSarga(kanda.slug, sargaN);
+const { prev, next } = getPrevNextSarga(kanda.slug, sargaN);
+const hasHindi = doc.verses.some((v) => Boolean(v.hi));
+const allHiVerified = hasHindi && doc.verses.every((v) => v.hi_verified);
+const currentPath = sargaUrl(kanda.slug, sargaN);
+const lastTitle = `${kanda.name_iast} · Sarga ${sargaN}`;
+---
+<Base title={`${kanda.name_iast} ${kanda.n}.${sargaN}`}>
+  <div class="mb-4 border-b border-[var(--border)] pb-4">
+    <p class="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
+      <a href={kandaUrl(kanda.slug)} class="no-underline hover:underline">
+        <span class="deva">{kanda.name_sa}</span> &middot; {kanda.name_iast} &middot; {kanda.name_en}
+      </a>
+    </p>
+    <h1 class="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
+      Sarga {sargaN} &middot; <span class="deva font-semibold text-[var(--accent)]">सर्गः {intToDeva(sargaN)}</span>
+    </h1>
+    <p class="mt-1 text-xs text-[var(--muted)]">
+      {doc.verses.length} shlokas &middot; Sanskrit Wikisource rev. {doc.sa_source.revid}
+    </p>
+  </div>
+
+  <SargaNav kandaSlug={kanda.slug} kandaName={kanda.name_iast} prev={prev} next={next} position="top" />
+  <ReaderControls />
+
+  <p class="hi-notice mb-5 rounded border border-[var(--border)] bg-[var(--surface)]/70 px-3 py-2 text-xs text-[var(--muted)]">
+    {hasHindi
+      ? (allHiVerified
+          ? 'हिन्दी अनुवाद समुदाय द्वारा सत्यापित है (CC0)।'
+          : 'Hindi lines (हिन्दी) are unreviewed CC0 machine drafts generated strictly from the Sanskrit shlokas.')
+      : 'Hindi translation drafts are pending offline IndicTrans2 generation from the public-domain Sanskrit text.'}
+  </p>
+
+  <div class="reader-grid">
+    <section id="verses" aria-label="Verses" class="measure">
+      {doc.verses.map((v) => (
+        <Verse verse={v} />
+      ))}
+    </section>
+
+    <aside id="en" lang="en" aria-label="English prose translation" class="measure rounded-lg border border-[var(--border)] bg-[var(--surface)]/45 p-5 sm:p-6">
+      <header class="mb-4 border-b border-[var(--border)] pb-3">
+        <h2 class="text-base font-semibold">English Prose</h2>
+        <p class="mt-0.5 text-xs text-[var(--muted)]">{formatEnSourceLabel(doc.en.source)}</p>
+        {doc.en.covers && doc.en.covers.length > 1 && (
+          <p class="mt-1 text-xs font-medium text-[var(--accent)]">
+            Covers Sargas {doc.en.covers[0]}–{doc.en.covers[doc.en.covers.length - 1]} (merged in source OCR).
+          </p>
+        )}
+      </header>
+      {doc.en.paragraphs.length > 0 ? (
+        <div class="space-y-4 text-[0.97em] leading-relaxed">
+          {doc.en.paragraphs.map((p, idx) => (
+            <p id={`en-${idx + 1}`}>{p}</p>
+          ))}
+        </div>
+      ) : doc.en.status === 'see_sarga' && doc.en.ref ? (
+        <p class="text-sm text-[var(--muted)]">
+          English prose for this sarga is included in <a href={sargaUrl(kanda.slug, doc.en.ref)}>Sarga {doc.en.ref}</a> (section heading omitted in 1891–1894 OCR).
+        </p>
+      ) : (
+        <p class="text-sm text-[var(--muted)]">
+          English prose is not available for this sarga in the current M. N. Dutt OCR alignment.
+        </p>
+      )}
+    </aside>
+  </div>
+
+  <div class="mt-8 border-t border-[var(--border)] pt-4">
+    <SargaNav kandaSlug={kanda.slug} kandaName={kanda.name_iast} prev={prev} next={next} position="bottom" />
+  </div>
+
+  <script is:inline define:vars={{ SLUG: kanda.slug, KANDA: kanda.n, SARGA: sargaN, TITLE: lastTitle, PATH: currentPath, REPO: REPO_URL }}>
+    try {
+      localStorage.setItem('vr:last', JSON.stringify({ slug: SLUG, sarga: SARGA, title: TITLE, path: PATH }));
+    } catch {}
+    document.querySelectorAll('#verses > article.v').forEach(function (el) {
+      var n = el.id.slice(1);
+      var a = document.createElement('a');
+      a.className = 'rp';
+      a.textContent = 'report';
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      var ref = KANDA + '.' + SARGA + '.' + n;
+      a.href = REPO + '/issues/new?template=verse-correction.yml&title=Correction:+' + ref + '&verse=' + ref;
+      el.insertBefore(a, el.firstChild ? el.firstChild.nextSibling : null);
+    });
+  </script>
+</Base>

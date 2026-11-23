@@ -1,0 +1,12 @@
+---
+import type { VerseEntry } from '../lib/data';
+
+interface Props {
+  verse: VerseEntry;
+}
+
+const { verse } = Astro.props;
+const saLines = verse.sa.split('\n');
+const iastLines = verse.iast.split('\n');
+---
+<article id={`v${verse.n}`} class="v"><a class="vn" href={`#v${verse.n}`}>{verse.n}</a><p class="sa" lang="sa">{saLines.map((ln, idx) => (<>{idx > 0 && <br />}{ln}</>))}</p><p class="ia" lang="sa-Latn">{iastLines.map((ln, idx) => (<>{idx > 0 && <br />}{ln}</>))}</p>{verse.hi && <p class="hi" lang="hi">{verse.hi}</p>}</article>

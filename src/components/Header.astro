@@ -1,0 +1,16 @@
+---
+import { withBase } from '../lib/url';
+---
+<header class="border-b border-[var(--border)] bg-[var(--surface)]/70">
+  <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-6">
+    <a href={withBase('')} class="flex items-baseline gap-2.5 text-[var(--ink)] no-underline hover:text-[var(--accent)]">
+      <span class="deva text-lg font-semibold">वाल्मीकिरामायणम्</span>
+      <span class="text-base font-semibold tracking-tight">Vālmīki Rāmāyaṇa</span>
+    </a>
+    <nav aria-label="Primary" class="flex flex-wrap items-center gap-5 text-sm font-medium">
+      <a href={withBase('search/')} class="no-underline hover:underline">Search</a>
+      <a href={withBase('offline/')} class="no-underline hover:underline">Offline</a>
+      <a href={withBase('sources/')} class="no-underline hover:underline">Sources</a>
+    </nav>
+  </div>
+</header>

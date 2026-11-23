@@ -1,0 +1,81 @@
+---
+import Base from '../layouts/Base.astro';
+import { REPO_URL } from '../config';
+import { getIndex, getProvenance } from '../lib/data';
+
+const index = getIndex();
+const prov = getProvenance() as {
+  english?: {
+    volumes?: Record<string, { ia_item: string; ia_file: string; years: string; sha256: string }>;
+  };
+  hindi?: { model_id?: string; revision?: string };
+};
+const volumes = Object.values(prov.english?.volumes ?? {});
+const { totals } = index;
+---
+<Base title="Sources & Licensing">
+  <article class="prose prose-reader measure">
+    <h1>Sources, Copyright Guardrails &amp; Attribution</h1>
+    <p>
+      This edition is built with strict public-domain and open-license provenance. Zero copyrighted translations, commentaries, or modern web portals are used.
+    </p>
+
+    <h2>1. Sanskrit Text (Devanagari)</h2>
+    <ul>
+      <li><strong>Source:</strong> <a href="https://sa.wikisource.org/wiki/%E0%A4%B0%E0%A4%BE%E0%A4%AE%E0%A4%BE%E0%A4%AF%E0%A4%A3%E0%A4%AE%E0%A5%8D" target="_blank" rel="noopener noreferrer">Sanskrit Wikisource</a> (Southern / vulgate recension, {totals.sargas.toLocaleString()} sargas, {totals.verses.toLocaleString()} shlokas).</li>
+      <li><strong>License:</strong> The classical Sanskrit text of Vālmīki is in the public domain. The digital transcription is generously maintained by Wikisource contributors under <strong>CC BY-SA 4.0</strong>.</li>
+      <li><strong>Provenance &amp; Filtering:</strong> Each sarga JSON stores its exact Wikisource page title and <code>revid</code>. Editorial footnotes (<code>&lt;ref&gt;</code>), commentary links, and audio/navigation templates are removed at parse time.</li>
+    </ul>
+
+    <h2>2. IAST Transliteration &amp; Typography</h2>
+    <ul>
+      <li><strong>Transliteration:</strong> Generated deterministically from the Sanskrit Devanagari text using <code>indic-transliteration</code> (Sanscript, <code>DEVANAGARI &rarr; IAST</code>).</li>
+      <li><strong>Fonts:</strong> Self-hosted variable fonts <em>Source Serif 4</em> and <em>Noto Serif Devanagari</em> (Fontsource), licensed under the <strong>SIL Open Font License 1.1</strong>. Zero raster images are shipped.</li>
+    </ul>
+
+    <h2>3. English Prose Translation</h2>
+    <ul>
+      <li><strong>Edition:</strong> Manmatha Nath (M. N.) Dutt, <em>The Ramayana: Translated into English Prose from the Original Sanskrit of Valmiki</em> (Calcutta, 1891–1894, 7 volumes).</li>
+      <li><strong>Status:</strong> <strong>100% Public Domain</strong> (published 1891–1894; author died 1914).</li>
+      <li><strong>Caveats:</strong> Text is derived from uncorrected Internet Archive OCR and stored strictly at <strong>sarga level</strong> ({totals.en_sargas.toLocaleString()} of {totals.sargas.toLocaleString()} sargas have direct <code>ocr_unreviewed</code> prose; skipped OCR headings link via <code>see_sarga</code>). Yuddha and Uttara Kāṇḍas include extra sections in Dutt's 1893–1894 edition relative to Wikisource and are aligned monotonically at sarga level for cross-reference.</li>
+    </ul>
+    {volumes.length > 0 && (
+      <ul>
+        {volumes.map((v) => (
+          <li>
+            <strong>{v.years}:</strong>{' '}
+            <a href={`https://archive.org/details/${v.ia_item}`} target="_blank" rel="noopener noreferrer">{v.ia_item}</a>{' '}
+            (<code>{v.ia_file}</code>, sha256 <code>{v.sha256.slice(0, 12)}</code>)
+          </li>
+        ))}
+      </ul>
+    )}
+
+    <h2>4. Hindi Drafts (Copyright-Clean)</h2>
+    <ul>
+      <li><strong>Method:</strong> Generated offline and deterministically per shloka strictly from the public-domain Sanskrit text using AI4Bharat <a href="https://huggingface.co/ai4bharat/indictrans2-indic-indic-dist-320M" target="_blank" rel="noopener noreferrer">IndicTrans2</a> (<code>{prov.hindi?.model_id ?? 'ai4bharat/indictrans2-indic-indic-dist-320M'}</code>, MIT License, pinned revision <code>{(prov.hindi?.revision ?? 'ffb7582').slice(0, 12)}</code>).</li>
+      <li><strong>Provenance Fields:</strong> Every verse records <code>hi_source</code> (<code>pending</code>, <code>generated_from_pd_v1</code>, or <code>community_verified</code>) and boolean <code>hi_verified</code>.</li>
+      <li><strong>Current Status:</strong> <strong>{totals.hi_generated.toLocaleString()}</strong> of {totals.verses.toLocaleString()} shlokas generated ({totals.hi_verified.toLocaleString()} community-verified).</li>
+      <li><strong>License:</strong> Generated Hindi drafts are released under <strong>CC0 1.0 Universal</strong> (see <code>DATA-LICENSE.md</code>).</li>
+    </ul>
+
+    <h2>5. Explicitly Excluded Sources</h2>
+    <p>
+      To maintain clean copyright boundaries, the following works and portals are <strong>not used</strong>:
+    </p>
+    <ul>
+      <li>Gita Press Gorakhpur editions and Hindi/English translations</li>
+      <li>Bibek Debroy (Penguin) translation</li>
+      <li>Robert P. Goldman / Princeton Clay Sanskrit / Critical Edition translations &amp; notes</li>
+      <li><code>valmikiramayan.net</code> modern word-for-word glosses and commentary</li>
+      <li>IIT Kanpur / Gita Supersite modern portal translations</li>
+      <li>Ralph T. H. Griffith (1870) verse translation (public domain, excluded because its recension and canto numbering diverge from the Sanskrit Wikisource text while M. N. Dutt covers all seven Kāṇḍas)</li>
+    </ul>
+
+    <h2>6. Corrections &amp; Takedown Requests</h2>
+    <ul>
+      <li><a href={`${REPO_URL}/issues/new?template=verse-correction.yml`} target="_blank" rel="noopener noreferrer">Submit a verse, OCR, or Hindi correction</a></li>
+      <li><a href={`${REPO_URL}/issues/new?template=copyright-takedown.yml`} target="_blank" rel="noopener noreferrer">Report a copyright or attribution concern</a></li>
+    </ul>
+  </article>
+</Base>

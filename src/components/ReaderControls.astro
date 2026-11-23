@@ -1,0 +1,108 @@
+---
+---
+<div class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2.5 text-sm" role="region" aria-label="Reading display controls">
+  <div class="flex flex-wrap items-center gap-1.5" role="group" aria-label="Text layers">
+    <button type="button" data-layer="sa" aria-pressed="true" class="ctrl-btn rounded border border-[var(--border)] px-2.5 py-1 font-medium transition-colors">
+      <span class="deva">देवनागरी</span>
+    </button>
+    <button type="button" data-layer="iast" aria-pressed="true" class="ctrl-btn rounded border border-[var(--border)] px-2.5 py-1 font-medium transition-colors">
+      IAST
+    </button>
+    <button type="button" data-layer="hi" aria-pressed="true" class="ctrl-btn rounded border border-[var(--border)] px-2.5 py-1 font-medium transition-colors">
+      <span class="deva">हिन्दी</span>
+    </button>
+    <button type="button" data-layer="en" aria-pressed="true" class="ctrl-btn rounded border border-[var(--border)] px-2.5 py-1 font-medium transition-colors">
+      English
+    </button>
+  </div>
+  <div class="flex flex-wrap items-center gap-3">
+    <div class="flex items-center gap-1" role="group" aria-label="Theme">
+      <button type="button" data-theme-set="paper" aria-pressed="true" class="ctrl-btn rounded border border-[var(--border)] px-2 py-1 text-xs">Paper</button>
+      <button type="button" data-theme-set="sepia" aria-pressed="false" class="ctrl-btn rounded border border-[var(--border)] px-2 py-1 text-xs">Sepia</button>
+      <button type="button" data-theme-set="dark" aria-pressed="false" class="ctrl-btn rounded border border-[var(--border)] px-2 py-1 text-xs">Dark</button>
+    </div>
+    <div class="flex items-center gap-1" role="group" aria-label="Font size">
+      <button type="button" data-size-set="sm" aria-pressed="false" class="ctrl-btn rounded border border-[var(--border)] px-2 py-1 text-xs">A-</button>
+      <button type="button" data-size-set="md" aria-pressed="true" class="ctrl-btn rounded border border-[var(--border)] px-2 py-1 text-xs">A</button>
+      <button type="button" data-size-set="lg" aria-pressed="false" class="ctrl-btn rounded border border-[var(--border)] px-2 py-1 text-xs">A+</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .ctrl-btn {
+    background: var(--bg);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .ctrl-btn[aria-pressed="true"] {
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-color: var(--accent);
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var KEY = 'vr:prefs';
+    function loadPrefs() {
+      var d = { sa: true, iast: true, hi: true, en: true, theme: 'paper', size: 'md' };
+      try {
+        var raw = localStorage.getItem(KEY);
+        if (raw) Object.assign(d, JSON.parse(raw));
+      } catch {}
+      return d;
+    }
+    function savePrefs(p) {
+      try {
+        localStorage.setItem(KEY, JSON.stringify(p));
+      } catch {}
+    }
+    function applyPrefs(p) {
+      var r = document.documentElement;
+      r.classList.remove('theme-paper', 'theme-sepia', 'theme-dark', 'size-sm', 'size-md', 'size-lg');
+      r.classList.add('theme-' + p.theme, 'size-' + p.size);
+      r.classList.toggle('hide-sa', !p.sa);
+      r.classList.toggle('hide-iast', !p.iast);
+      r.classList.toggle('hide-hi', !p.hi);
+      r.classList.toggle('hide-en', !p.en);
+
+      document.querySelectorAll('[data-layer]').forEach(function (btn) {
+        var k = btn.getAttribute('data-layer');
+        btn.setAttribute('aria-pressed', String(Boolean(p[k])));
+      });
+      document.querySelectorAll('[data-theme-set]').forEach(function (btn) {
+        btn.setAttribute('aria-pressed', String(btn.getAttribute('data-theme-set') === p.theme));
+      });
+      document.querySelectorAll('[data-size-set]').forEach(function (btn) {
+        btn.setAttribute('aria-pressed', String(btn.getAttribute('data-size-set') === p.size));
+      });
+    }
+
+    var prefs = loadPrefs();
+    applyPrefs(prefs);
+
+    document.querySelectorAll('[data-layer]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var k = btn.getAttribute('data-layer');
+        prefs[k] = !prefs[k];
+        savePrefs(prefs);
+        applyPrefs(prefs);
+      });
+    });
+    document.querySelectorAll('[data-theme-set]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        prefs.theme = btn.getAttribute('data-theme-set');
+        savePrefs(prefs);
+        applyPrefs(prefs);
+      });
+    });
+    document.querySelectorAll('[data-size-set]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        prefs.size = btn.getAttribute('data-size-set');
+        savePrefs(prefs);
+        applyPrefs(prefs);
+      });
+    });
+  })();
+</script>

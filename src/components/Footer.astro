@@ -1,0 +1,17 @@
+---
+import { REPO_URL } from '../config';
+import { withBase } from '../lib/url';
+---
+<footer class="mt-16 border-t border-[var(--border)] py-8 text-sm text-[var(--muted)]">
+  <div class="mx-auto flex max-w-6xl flex-col gap-3 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+    <p class="m-0">
+      Public-domain Sanskrit &amp; M. N. Dutt (1891–1894) prose; CC0 Hindi machine drafts. Zero images.
+    </p>
+    <div class="flex flex-wrap gap-4">
+      <a href={withBase('sources/')}>Sources &amp; Licensing</a>
+      <a href={withBase('offline/')}>Offline Library</a>
+      <a href={`${REPO_URL}/issues/new?template=copyright-takedown.yml`} target="_blank" rel="noopener noreferrer">Takedown / Attribution</a>
+      <a href={REPO_URL} target="_blank" rel="noopener noreferrer">GitHub</a>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,45 @@
+name: Verse Correction
+description: Report a typo, OCR error, alignment issue, or mistranslation in a verse or sarga.
+title: "Correction: "
+labels: ["correction"]
+body:
+  - type: input
+    id: verse
+    attributes:
+      label: Verse or Sarga Reference
+      description: Format Kanda.Sarga.Verse (e.g. 1.1.12) or Kanda.Sarga for English prose (e.g. 1.1).
+      placeholder: "1.1.12"
+    validations:
+      required: true
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Text Layer
+      options:
+        - Sanskrit
+        - IAST
+        - Hindi
+        - English
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: Current Text
+      description: Copy the current text shown on the site.
+    validations:
+      required: false
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Proposed Text
+      description: Provide the corrected text (must be public-domain / original work, not copied from copyrighted editions).
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Source / Justification
+      description: Reference to the Sanskrit Wikisource revision, M.N. Dutt 1891–1894 scan page, or grammatical note.
+    validations:
+      required: true

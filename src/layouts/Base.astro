@@ -1,0 +1,78 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE_DESCRIPTION, SITE_TITLE } from '../config';
+import { withBase } from '../lib/url';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title, description = SITE_DESCRIPTION } = Astro.props;
+const pageTitle = title ? `${title} · ${SITE_TITLE}` : SITE_TITLE;
+const baseUrl = withBase('');
+const isProd = import.meta.env.PROD;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#a3471a" />
+    <link rel="icon" type="image/svg+xml" href={withBase('icon.svg')} />
+    <link rel="manifest" href={withBase('manifest.webmanifest')} />
+    <script is:inline>
+      (function () {
+        var p = { sa: true, iast: true, hi: true, en: true, theme: 'paper', size: 'md' };
+        try {
+          var raw = localStorage.getItem('vr:prefs');
+          if (raw) Object.assign(p, JSON.parse(raw));
+        } catch {}
+        var r = document.documentElement;
+        r.classList.add('theme-' + (p.theme || 'paper'), 'size-' + (p.size || 'md'));
+        if (p.sa === false) r.classList.add('hide-sa');
+        if (p.iast === false) r.classList.add('hide-iast');
+        if (p.hi === false) r.classList.add('hide-hi');
+        if (p.en === false) r.classList.add('hide-en');
+      })();
+    </script>
+  </head>
+  <body class="flex min-h-screen flex-col antialiased">
+    <a href="#main" class="skip-link">Skip to content</a>
+    <Header />
+    <main id="main" class="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
+      <slot />
+    </main>
+    <Footer />
+    <script is:inline define:vars={{ BASE: baseUrl, PROD: isProd }}>
+      if (PROD && 'serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register(BASE + 'sw.js', { scope: BASE }).catch(function () {});
+        });
+      }
+      document.addEventListener('keydown', function (e) {
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        var el = document.activeElement;
+        if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable)) {
+          return;
+        }
+        if (e.key === '/') {
+          e.preventDefault();
+          var q = document.getElementById('search-q');
+          if (q) q.focus();
+          else window.location.href = BASE + 'search/';
+        } else if (e.key === 'ArrowLeft') {
+          var prev = document.querySelector('[data-nav-prev]');
+          if (prev) window.location.href = prev.getAttribute('href');
+        } else if (e.key === 'ArrowRight') {
+          var next = document.querySelector('[data-nav-next]');
+          if (next) window.location.href = next.getAttribute('href');
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,141 @@
+---
+import Base from '../layouts/Base.astro';
+import { getIndex } from '../lib/data';
+import { kandaUrl, withBase } from '../lib/url';
+
+const index = getIndex();
+const baseUrl = withBase('');
+---
+<Base title="Offline Library">
+  <section class="measure">
+    <h1 class="text-3xl font-bold tracking-tight">Offline Reading Library</h1>
+    <p class="mt-3 text-sm text-[var(--muted)]">
+      Pages you read are automatically cached for offline reading. You can also download complete Kāṇḍas for offline access, or browse what is stored on this device.
+    </p>
+    <p id="storage-info" class="mt-3 text-sm font-medium text-[var(--muted)]">Checking browser storage…</p>
+
+    <div class="mt-6 space-y-3" id="offline-kandas">
+      {index.kandas.map((k) => (
+        <div
+          data-slug={k.slug}
+          data-total={k.sargas.length}
+          class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 px-4 py-3"
+        >
+          <div>
+            <a href={kandaUrl(k.slug)} class="font-semibold no-underline hover:underline">
+              <span class="deva mr-1.5 text-[var(--accent)]">{k.name_sa}</span>
+              {k.name_iast}
+            </a>
+            <p class="k-stat text-xs text-[var(--muted)]">{k.sargas.length} sargas &middot; checking…</p>
+          </div>
+          <div class="flex items-center gap-2 text-xs">
+            <button type="button" class="k-dl cursor-pointer rounded bg-[var(--accent)] px-3 py-1.5 font-medium text-[var(--accent-ink)] hover:opacity-90">
+              Download
+            </button>
+            <button type="button" class="k-rm hidden cursor-pointer rounded border border-[var(--border)] bg-[var(--bg)] px-3 py-1.5 font-medium hover:border-[var(--accent)]">
+              Remove
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <div class="mt-8 border-t border-[var(--border)] pt-5">
+      <button id="clear-all" type="button" class="cursor-pointer rounded border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2 text-xs font-medium hover:border-[var(--accent)]">
+        Clear all offline caches
+      </button>
+    </div>
+  </section>
+
+  <script is:inline define:vars={{ BASE: baseUrl }}>
+    (function () {
+      var infoEl = document.getElementById('storage-info');
+      var rows = Array.from(document.querySelectorAll('#offline-kandas > div'));
+      var clearBtn = document.getElementById('clear-all');
+
+      if (!('caches' in window)) {
+        infoEl.textContent = 'Offline Cache API is unavailable in this browser.';
+        return;
+      }
+
+      async function updateUI() {
+        var names = await caches.keys();
+        if (navigator.storage && navigator.storage.estimate) {
+          try {
+            var est = await navigator.storage.estimate();
+            var usedMb = ((est.usage || 0) / (1024 * 1024)).toFixed(2);
+            var quotaMb = est.quota ? ((est.quota / (1024 * 1024)).toFixed(0) + ' MB quota') : '';
+            infoEl.textContent = 'Browser cache usage: ' + usedMb + ' MB' + (quotaMb ? ' (' + quotaMb + ')' : '');
+          } catch {}
+        }
+
+        for (var row of rows) {
+          var slug = row.getAttribute('data-slug');
+          var total = Number(row.getAttribute('data-total'));
+          var statEl = row.querySelector('.k-stat');
+          var dlBtn = row.querySelector('.k-dl');
+          var rmBtn = row.querySelector('.k-rm');
+          var cacheName = 'vr-kanda-' + slug;
+          if (names.includes(cacheName)) {
+            var c = await caches.open(cacheName);
+            var keys = await c.keys();
+            var count = keys.filter(function (req) { return /\/\d{3}\/?$/.test(new URL(req.url).pathname); }).length;
+            statEl.textContent = count + ' / ' + total + ' sargas cached offline';
+            rmBtn.classList.remove('hidden');
+            dlBtn.textContent = count >= total ? 'Refresh' : 'Resume';
+          } else {
+            statEl.textContent = total + ' sargas · not cached';
+            rmBtn.classList.add('hidden');
+            dlBtn.textContent = 'Download';
+          }
+        }
+      }
+
+      rows.forEach(function (row) {
+        var slug = row.getAttribute('data-slug');
+        var statEl = row.querySelector('.k-stat');
+        var dlBtn = row.querySelector('.k-dl');
+        var rmBtn = row.querySelector('.k-rm');
+
+        dlBtn.addEventListener('click', async function () {
+          dlBtn.disabled = true;
+          try {
+            var res = await fetch(BASE + 'offline/' + slug + '.json');
+            var data = await res.json();
+            var urls = data.urls || [];
+            var cache = await caches.open('vr-kanda-' + slug);
+            var done = 0;
+            var idx = 0;
+            async function worker() {
+              while (idx < urls.length) {
+                var u = urls[idx++];
+                try {
+                  var r = await fetch(u, { credentials: 'same-origin' });
+                  if (r.ok) await cache.put(u, r);
+                } catch {}
+                done++;
+                statEl.textContent = done + ' / ' + urls.length + ' downloading…';
+              }
+            }
+            await Promise.all([worker(), worker(), worker(), worker()]);
+          } catch {}
+          dlBtn.disabled = false;
+          await updateUI();
+        });
+
+        rmBtn.addEventListener('click', async function () {
+          await caches.delete('vr-kanda-' + slug);
+          await updateUI();
+        });
+      });
+
+      clearBtn.addEventListener('click', async function () {
+        var keys = await caches.keys();
+        await Promise.all(keys.filter(function (k) { return k.startsWith('vr-'); }).map(function (k) { return caches.delete(k); }));
+        await updateUI();
+      });
+
+      updateUI();
+    })();
+  </script>
+</Base>

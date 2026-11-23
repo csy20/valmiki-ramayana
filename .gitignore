@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.astro/
+pipeline/raw/
+pipeline/cache/
+pipeline/.venv/
+pipeline/.venv-hi/
+__pycache__/
+*.pyc
+.DS_Store

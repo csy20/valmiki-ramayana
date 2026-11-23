@@ -1,0 +1,142 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getIndex } from '../../lib/data';
+import { sargaUrl, withBase } from '../../lib/url';
+
+export function getStaticPaths() {
+  return getIndex().kandas.map((kanda) => ({
+    params: { kanda: kanda.slug },
+    props: { kanda },
+  }));
+}
+
+const { kanda } = Astro.props;
+const baseUrl = withBase('');
+---
+<Base title={kanda.name_iast}>
+  <div class="mb-8 flex flex-col gap-4 border-b border-[var(--border)] pb-6 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <p class="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
+        <a href={withBase('')} class="no-underline hover:underline">Rāmāyaṇa</a> / Kāṇḍa {kanda.n}
+      </p>
+      <h1 class="mt-1 text-3xl font-bold tracking-tight">
+        <span class="deva mr-2 text-[var(--accent)]">{kanda.name_sa}</span>
+        {kanda.name_iast}
+      </h1>
+      <p class="mt-1 text-sm text-[var(--muted)]">
+        {kanda.name_en} &middot; {kanda.sargas.length} sargas &middot; {kanda.verse_count.toLocaleString()} shlokas
+      </p>
+    </div>
+
+    <div
+      data-kanda-dl={kanda.slug}
+      data-total={kanda.sargas.length}
+      class="flex flex-wrap items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2.5 text-sm"
+    >
+      <button type="button" id="dl-btn" class="cursor-pointer rounded bg-[var(--accent)] px-3 py-1.5 font-medium text-[var(--accent-ink)] hover:opacity-90">
+        Download Kanda offline
+      </button>
+      <button type="button" id="rm-btn" class="hidden cursor-pointer rounded border border-[var(--border)] bg-[var(--bg)] px-3 py-1.5 font-medium text-[var(--ink)] hover:border-[var(--accent)]">
+        Remove offline copy
+      </button>
+      <span id="dl-status" class="text-xs text-[var(--muted)]">Checking cache…</span>
+    </div>
+  </div>
+
+  <ol class="divide-y divide-[var(--border)]">
+    {kanda.sargas.map((s) => (
+      <li class="py-3">
+        <a href={sargaUrl(kanda.slug, s.n)} class="group flex flex-col gap-1 no-underline sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+          <div class="flex items-baseline gap-3">
+            <span class="w-20 shrink-0 font-semibold text-[var(--accent)] group-hover:underline">
+              Sarga {s.n}
+            </span>
+            <span class="text-sm text-[var(--ink)]">{s.preview}</span>
+          </div>
+          <div class="flex shrink-0 items-center gap-3 text-xs text-[var(--muted)]">
+            <span>{s.verses} vv.</span>
+            <span>{s.en === 'ocr_unreviewed' ? 'EN OCR' : s.en === 'community_verified' ? 'EN verified' : s.en === 'see_sarga' ? 'EN merged' : 'EN missing'}</span>
+          </div>
+        </a>
+      </li>
+    ))}
+  </ol>
+
+  <script is:inline define:vars={{ BASE: baseUrl, SLUG: kanda.slug, TOTAL: kanda.sargas.length }}>
+    (function () {
+      var CACHE_NAME = 'vr-kanda-' + SLUG;
+      var dlBtn = document.getElementById('dl-btn');
+      var rmBtn = document.getElementById('rm-btn');
+      var statusEl = document.getElementById('dl-status');
+
+      if (!('caches' in window)) {
+        if (statusEl) statusEl.textContent = 'Offline Cache API unsupported in this browser.';
+        if (dlBtn) dlBtn.disabled = true;
+        return;
+      }
+
+      async function refreshStatus() {
+        var cache = await caches.open(CACHE_NAME);
+        var keys = await cache.keys();
+        var sargaCount = keys.filter(function (req) { return /\/\d{3}\/?$/.test(new URL(req.url).pathname); }).length;
+        var estText = '';
+        if (navigator.storage && navigator.storage.estimate) {
+          try {
+            var est = await navigator.storage.estimate();
+            if (est.usage != null) {
+              estText = ' · ' + (est.usage / (1024 * 1024)).toFixed(1) + ' MB used';
+            }
+          } catch {}
+        }
+        if (sargaCount > 0) {
+          statusEl.textContent = sargaCount + ' / ' + TOTAL + ' sargas offline' + estText;
+          rmBtn.classList.remove('hidden');
+          dlBtn.textContent = sargaCount >= TOTAL ? 'Refresh offline copy' : 'Resume offline download';
+        } else {
+          statusEl.textContent = 'Not cached offline' + estText;
+          rmBtn.classList.add('hidden');
+          dlBtn.textContent = 'Download Kanda offline';
+        }
+      }
+
+      dlBtn.addEventListener('click', async function () {
+        dlBtn.disabled = true;
+        try {
+          statusEl.textContent = 'Fetching manifest…';
+          var res = await fetch(BASE + 'offline/' + SLUG + '.json');
+          var data = await res.json();
+          var urls = data.urls || [];
+          var cache = await caches.open(CACHE_NAME);
+          var done = 0;
+          var idx = 0;
+          var conc = 4;
+
+          async function worker() {
+            while (idx < urls.length) {
+              var u = urls[idx++];
+              try {
+                var r = await fetch(u, { credentials: 'same-origin' });
+                if (r.ok) await cache.put(u, r);
+              } catch {}
+              done++;
+              statusEl.textContent = done + ' / ' + urls.length;
+            }
+          }
+          await Promise.all(Array.from({ length: conc }, worker));
+          await refreshStatus();
+        } catch (err) {
+          statusEl.textContent = 'Download interrupted; retry anytime.';
+        } finally {
+          dlBtn.disabled = false;
+        }
+      });
+
+      rmBtn.addEventListener('click', async function () {
+        await caches.delete(CACHE_NAME);
+        await refreshStatus();
+      });
+
+      refreshStatus();
+    })();
+  </script>
+</Base>

@@ -1,0 +1,101 @@
+{
+  "06-yuddha": [
+    {
+      "dutt_from": 70,
+      "dutt_to": 71,
+      "delta": 1
+    },
+    {
+      "dutt_from": 90,
+      "dutt_to": 104,
+      "delta": -1
+    },
+    {
+      "dutt_from": 108,
+      "dutt_to": 130,
+      "delta": -2
+    }
+  ],
+  "07-uttara": [
+    {
+      "dutt_from": 8,
+      "dutt_to": 9,
+      "delta": -1
+    },
+    {
+      "dutt_from": 13,
+      "dutt_to": 14,
+      "delta": -1
+    },
+    {
+      "dutt_from": 29,
+      "dutt_to": 34,
+      "delta": -5
+    },
+    {
+      "dutt_from": 35,
+      "dutt_to": 35,
+      "delta": -4
+    },
+    {
+      "dutt_from": 37,
+      "dutt_to": 41,
+      "delta": -5
+    },
+    {
+      "dutt_from": 43,
+      "dutt_to": 43,
+      "delta": -6
+    },
+    {
+      "dutt_from": 45,
+      "dutt_to": 45,
+      "delta": -7
+    },
+    {
+      "dutt_from": 49,
+      "dutt_to": 51,
+      "delta": -10
+    },
+    {
+      "dutt_from": 53,
+      "dutt_to": 53,
+      "delta": -11
+    },
+    {
+      "dutt_from": 54,
+      "dutt_to": 64,
+      "delta": -10
+    },
+    {
+      "dutt_from": 65,
+      "dutt_to": 65,
+      "delta": -9
+    },
+    {
+      "dutt_from": 67,
+      "dutt_to": 69,
+      "delta": -10
+    },
+    {
+      "dutt_from": 73,
+      "dutt_to": 74,
+      "delta": -13
+    },
+    {
+      "dutt_from": 76,
+      "dutt_to": 76,
+      "delta": -14
+    },
+    {
+      "dutt_from": 78,
+      "dutt_to": 78,
+      "delta": -15
+    },
+    {
+      "dutt_from": 79,
+      "dutt_to": 124,
+      "delta": -13
+    }
+  ]
+}
