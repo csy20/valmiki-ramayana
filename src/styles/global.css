@@ -14,34 +14,49 @@
 
 :root,
 html.theme-paper {
-  --bg: #fbf8f1;
-  --surface: #f4eee1;
-  --ink: #1f1a14;
+  color-scheme: light;
+  --bg: #faf6ee;
+  --surface: #f2eadb;
+  --surface-hover: #eae0cc;
+  --ink: #1c1712;
   --muted: #5d5041;
-  --border: #dfd3bd;
-  --accent: #a3471a;
+  --border: color-mix(in srgb, #1c1712 13%, transparent);
+  --border-strong: color-mix(in srgb, #1c1712 24%, transparent);
+  --accent: #9e3b14;
+  --accent-soft: color-mix(in srgb, #9e3b14 11%, transparent);
   --accent-ink: #ffffff;
+  --mark-bg: rgba(196, 118, 38, 0.24);
   --scale: 1;
 }
 
 html.theme-sepia {
-  --bg: #f3ead8;
-  --surface: #e9dcc2;
-  --ink: #2a2015;
-  --muted: #62513d;
-  --border: #d4c2a1;
-  --accent: #8f3b14;
+  color-scheme: light;
+  --bg: #efe5d0;
+  --surface: #e5d7bb;
+  --surface-hover: #dccaa7;
+  --ink: #2b2014;
+  --muted: #614f3b;
+  --border: color-mix(in srgb, #2b2014 15%, transparent);
+  --border-strong: color-mix(in srgb, #2b2014 26%, transparent);
+  --accent: #8a3310;
+  --accent-soft: color-mix(in srgb, #8a3310 12%, transparent);
   --accent-ink: #ffffff;
+  --mark-bg: rgba(176, 98, 22, 0.26);
 }
 
 html.theme-dark {
-  --bg: #14110d;
-  --surface: #1e1913;
-  --ink: #e9e2d4;
-  --muted: #b5a894;
-  --border: #362e23;
-  --accent: #e07a47;
-  --accent-ink: #14110d;
+  color-scheme: dark;
+  --bg: #12100d;
+  --surface: #1b1713;
+  --surface-hover: #241e18;
+  --ink: #e8dfd0;
+  --muted: #afa28f;
+  --border: color-mix(in srgb, #e8dfd0 13%, transparent);
+  --border-strong: color-mix(in srgb, #e8dfd0 24%, transparent);
+  --accent: #e58852;
+  --accent-soft: color-mix(in srgb, #e58852 15%, transparent);
+  --accent-ink: #12100d;
+  --mark-bg: rgba(229, 136, 82, 0.28);
 }
 
 html.size-sm {
@@ -51,28 +66,68 @@ html.size-md {
   --scale: 1;
 }
 html.size-lg {
-  --scale: 1.14;
+  --scale: 1.15;
 }
 
 @layer base {
+  html {
+    container-type: scroll-state;
+    accent-color: var(--accent);
+    scrollbar-color: var(--border-strong) var(--bg);
+    scrollbar-width: auto;
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
   body {
     background-color: var(--bg);
     color: var(--ink);
     font-family: var(--font-serif);
+    font-optical-sizing: auto;
     font-size: calc(1.0625rem * var(--scale));
-    line-height: 1.65;
+    line-height: 1.68;
     margin: 0;
     min-height: 100vh;
   }
 
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
   a {
     color: var(--accent);
-    text-underline-offset: 0.18em;
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: 1px;
+  }
+
+  ::selection {
+    background: var(--mark-bg);
+    color: var(--ink);
+  }
+
+  mark {
+    background: var(--mark-bg);
+    color: var(--ink);
+    padding: 0 0.15em;
+    border-radius: 2px;
   }
 
   :focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+  }
+
+  :target {
+    scroll-margin-top: 5.25rem;
   }
 }
 
@@ -83,19 +138,88 @@ html.size-lg {
   padding: 0.5rem 1rem;
   background: var(--accent);
   color: var(--accent-ink);
-  z-index: 50;
+  z-index: 60;
 }
 .skip-link:focus {
   left: 0.75rem;
   top: 0.75rem;
 }
 
+/* Sticky auto-hiding compact header */
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: color-mix(in srgb, var(--bg) 90%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  transition: transform 200ms ease;
+}
+
+@container scroll-state((scrolled: bottom) and (scrollable: top)) {
+  .top-bar {
+    transform: translateY(-100%);
+  }
+}
+.top-bar.is-hidden:not(:focus-within) {
+  transform: translateY(-100%);
+}
+.top-bar:focus-within {
+  transform: none;
+}
+
+/* Pure CSS compositor-only scroll reading progress bar */
+.read-progress {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  z-index: 50;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    @keyframes grow-progress {
+      from {
+        transform: scaleX(0);
+      }
+      to {
+        transform: scaleX(1);
+      }
+    }
+
+    .read-progress {
+      animation: grow-progress auto linear;
+      animation-timeline: scroll(root block);
+    }
+  }
+}
+
 .measure {
-  max-width: 68ch;
+  max-width: 66ch;
 }
 
 .deva {
   font-family: var(--font-deva);
+}
+
+.ornament-rule {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  color: var(--muted);
+}
+.ornament-rule::before,
+.ornament-rule::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
 }
 
 /* Reader layer toggles (no JS re-render) */
@@ -109,23 +233,110 @@ html.hide-hi .hi,
 html.hide-hi .hi-notice {
   display: none;
 }
+html.hide-en .en,
 html.hide-en #en {
   display: none;
 }
 
-/* Verse card styling - lean class names for HTML size budget */
+/* Segmented reader toolbar pills (calm fine-press chrome) */
+.layer-pill {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
+}
+.layer-pill:hover {
+  color: var(--ink);
+  background: var(--surface);
+}
+.layer-pill[aria-pressed="true"] {
+  color: var(--ink);
+  background: var(--bg);
+  border-color: var(--border-strong);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.swatch-btn {
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+.swatch-btn[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Native Popover (Aa Appearance menu) */
+[popover].vr-popover {
+  margin: 0;
+  inset: auto;
+  position: fixed;
+  top: 4rem;
+  right: 1rem;
+  width: min(21rem, calc(100vw - 2rem));
+  padding: 1rem 1.125rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-strong);
+  background: var(--bg);
+  color: var(--ink);
+  box-shadow: 0 18px 44px color-mix(in srgb, #000000 18%, transparent);
+}
+
+@media (min-width: 1280px) {
+  [popover].vr-popover {
+    right: max(1.5rem, calc((100vw - 72rem) / 2 + 1.5rem));
+  }
+}
+
+/* Native Modal Dialog (Jump to Sarga / Shloka) */
+dialog.vr-dialog {
+  margin: auto;
+  padding: 0;
+  width: min(28rem, calc(100vw - 2rem));
+  border-radius: 0.85rem;
+  border: 1px solid var(--border-strong);
+  background: var(--bg);
+  color: var(--ink);
+  box-shadow: 0 24px 60px color-mix(in srgb, #000000 28%, transparent);
+}
+dialog.vr-dialog::backdrop {
+  background: color-mix(in srgb, #000000 45%, transparent);
+  backdrop-filter: blur(3px);
+}
+
+/* Marginal-gutter critical-edition shloka layout (zero extra HTML nodes) */
 .v {
-  padding: 1rem 0;
+  padding: 1.15rem 0.5rem;
   border-bottom: 1px solid var(--border);
+  border-left: 2px solid transparent;
+  transition: background-color 180ms ease, border-color 180ms ease;
 }
 .v:last-child {
   border-bottom: 0;
 }
+.v:target {
+  background: var(--accent-soft);
+  border-left-color: var(--accent);
+  border-radius: 0 0.35rem 0.35rem 0;
+  padding-left: 0.85rem;
+}
+
+/* Defer offscreen layout work for massive sargas (strictly below initial fold) */
+.v:nth-child(n + 15) {
+  content-visibility: auto;
+  contain-intrinsic-size: auto none auto 160px;
+}
+
 .vn {
   display: inline-block;
   margin-bottom: 0.3rem;
-  font-size: 0.85em;
+  font-size: 0.82em;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
   color: var(--muted);
   text-decoration: none;
 }
@@ -133,41 +344,131 @@ html.hide-en #en {
   color: var(--accent);
   text-decoration: underline;
 }
+.v.is-bookmarked .vn::after {
+  content: " ★";
+  color: var(--accent);
+  font-size: 0.85em;
+}
+
 .sa {
   font-family: var(--font-deva);
-  font-size: 1.24em;
-  line-height: 1.9;
-  margin: 0.15rem 0 0.45rem;
+  font-size: 1.28em;
+  line-height: 1.95;
+  margin: 0.1rem 0 0.5rem;
+  color: var(--ink);
 }
 .ia {
   font-style: italic;
   color: var(--muted);
-  font-size: 0.96em;
+  font-size: 0.94em;
   line-height: 1.65;
-  margin: 0.2rem 0 0.45rem;
+  margin: 0.15rem 0 0.55rem;
 }
 .hi {
   font-family: var(--font-deva);
-  font-size: 1.04em;
-  line-height: 1.8;
-  margin: 0.3rem 0 0.1rem;
+  font-size: 1.03em;
+  line-height: 1.82;
+  margin: 0.45rem 0 0.1rem;
+  padding-left: 0.85rem;
+  border-left: 2px solid color-mix(in srgb, var(--accent) 34%, transparent);
+}
+.en {
+  font-family: var(--font-serif);
+  font-size: 0.97em;
+  line-height: 1.72;
+  color: var(--ink);
+  margin: 0.5rem 0 0.1rem;
+  padding-left: 0.85rem;
+  border-left: 2px solid var(--border-strong);
 }
 
-/* 2-column split on xl when both verses and English are shown */
-.reader-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 2.5rem;
-}
-@media (min-width: 1280px) {
-  .reader-grid {
-    grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+@media (min-width: 640px) {
+  .v {
+    display: grid;
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+    column-gap: 1.15rem;
     align-items: start;
+    padding: 1.3rem 0.75rem 1.3rem 0.25rem;
   }
-  html.hide-en .reader-grid,
-  html.hide-sa.hide-iast.hide-hi .reader-grid {
-    grid-template-columns: minmax(0, 68ch);
+  .vn {
+    grid-column: 1;
+    grid-row: 1 / span 5;
+    text-align: right;
+    margin-bottom: 0;
+    padding-top: 0.45rem;
   }
+  .sa,
+  .ia,
+  .hi,
+  .en {
+    grid-column: 2;
+  }
+}
+
+/* Focus Mode: serene distraction-free reading column */
+html.focus-mode .top-bar,
+html.focus-mode .site-footer,
+html.focus-mode .sarga-extra {
+  display: none;
+}
+.exit-focus-pill {
+  display: none;
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 45;
+  padding: 0.45rem 0.85rem;
+  border-radius: 9999px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 8px 24px color-mix(in srgb, #000000 18%, transparent);
+}
+html.focus-mode .exit-focus-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Quiet bottom toast for copy-link & bookmark */
+.vr-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.25rem;
+  transform: translateX(-50%) translateY(0.5rem);
+  opacity: 0;
+  z-index: 55;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.95rem;
+  border-radius: 9999px;
+  border: 1px solid var(--border-strong);
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 0.82rem;
+  box-shadow: 0 12px 32px color-mix(in srgb, #000000 25%, transparent);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+.vr-toast.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.vr-toast[hidden] {
+  display: none;
+}
+.vr-toast-btn {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: 0;
+  border-radius: 9999px;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .prose-reader {

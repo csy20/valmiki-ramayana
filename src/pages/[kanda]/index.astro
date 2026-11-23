@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { getIndex } from '../../lib/data';
+import { KANDA_META } from '../../lib/kanda-meta';
 import { sargaUrl, withBase } from '../../lib/url';
 
 export function getStaticPaths() {
@@ -11,51 +12,100 @@ export function getStaticPaths() {
 }
 
 const { kanda } = Astro.props;
+const meta = KANDA_META[kanda.slug];
 const baseUrl = withBase('');
 ---
 <Base title={kanda.name_iast}>
-  <div class="mb-8 flex flex-col gap-4 border-b border-[var(--border)] pb-6 sm:flex-row sm:items-end sm:justify-between">
-    <div>
-      <p class="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
-        <a href={withBase('')} class="no-underline hover:underline">Rāmāyaṇa</a> / Kāṇḍa {kanda.n}
-      </p>
-      <h1 class="mt-1 text-3xl font-bold tracking-tight">
-        <span class="deva mr-2 text-[var(--accent)]">{kanda.name_sa}</span>
-        {kanda.name_iast}
-      </h1>
-      <p class="mt-1 text-sm text-[var(--muted)]">
-        {kanda.name_en} &middot; {kanda.sargas.length} sargas &middot; {kanda.verse_count.toLocaleString()} shlokas
-      </p>
-    </div>
-
-    <div
-      data-kanda-dl={kanda.slug}
-      data-total={kanda.sargas.length}
-      class="flex flex-wrap items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2.5 text-sm"
+  <header class="relative mb-7 overflow-hidden border-b border-[var(--border)] pb-6">
+    <span
+      class="deva pointer-events-none absolute right-2 top-0 select-none text-8xl font-bold leading-none text-[var(--ink)]/[0.05]"
+      aria-hidden="true"
     >
-      <button type="button" id="dl-btn" class="cursor-pointer rounded bg-[var(--accent)] px-3 py-1.5 font-medium text-[var(--accent-ink)] hover:opacity-90">
-        Download Kanda offline
-      </button>
-      <button type="button" id="rm-btn" class="hidden cursor-pointer rounded border border-[var(--border)] bg-[var(--bg)] px-3 py-1.5 font-medium text-[var(--ink)] hover:border-[var(--accent)]">
-        Remove offline copy
-      </button>
-      <span id="dl-status" class="text-xs text-[var(--muted)]">Checking cache…</span>
-    </div>
-  </div>
+      {meta?.devaNum ?? kanda.n}
+    </span>
+    <div class="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+      <div class="max-w-2xl">
+        <p class="text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">
+          <a href={withBase('')} class="text-[var(--muted)] no-underline hover:text-[var(--accent)] hover:underline">Rāmāyaṇa</a>
+          <span class="mx-1.5">/</span>
+          <span>Kāṇḍa {kanda.n} &middot; {meta?.chapterRangeNote ?? kanda.name_en}</span>
+        </p>
+        <h1 class="mt-1.5 text-3xl font-bold tracking-tight sm:text-4xl">
+          <span class="deva mr-2.5 text-[var(--accent)]">{kanda.name_sa}</span>
+          <span>{kanda.name_iast}</span>
+        </h1>
+        {meta?.subtitle && (
+          <p class="mt-2 text-sm leading-relaxed text-[var(--muted)] sm:text-base">{meta.subtitle}</p>
+        )}
+        <p class="mt-2 text-xs font-medium uppercase tracking-wider text-[var(--muted)]">
+          {kanda.sargas.length} sargas &middot; {kanda.verse_count.toLocaleString()} shlokas
+        </p>
+      </div>
 
-  <ol class="divide-y divide-[var(--border)]">
+      <div
+        data-kanda-dl={kanda.slug}
+        data-total={kanda.sargas.length}
+        class="flex flex-col gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)]/75 px-4 py-3 text-sm sm:min-w-[16rem]"
+      >
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" id="dl-btn" class="cursor-pointer rounded-md bg-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-ink)] hover:opacity-90">
+            Download Kanda offline
+          </button>
+          <button type="button" id="rm-btn" class="hidden cursor-pointer rounded-md border border-[var(--border-strong)] bg-[var(--bg)] px-3 py-1.5 text-xs font-medium text-[var(--ink)] hover:border-[var(--accent)]">
+            Remove
+          </button>
+        </div>
+        <progress id="dl-progress" value="0" max={kanda.sargas.length} class="hidden h-1.5 w-full"></progress>
+        <span id="dl-status" class="text-xs text-[var(--muted)]">Checking offline cache…</span>
+      </div>
+    </div>
+  </header>
+
+  <section class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div class="relative flex-1 sm:max-w-md">
+      <label class="sr-only" for="sarga-filter">Filter sargas</label>
+      <input
+        id="sarga-filter"
+        type="search"
+        placeholder={`Filter ${kanda.sargas.length} sargas by number or preview…`}
+        autocomplete="off"
+        class="w-full rounded-lg border border-[var(--border-strong)] bg-[var(--bg)] px-3.5 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--muted)]"
+      />
+    </div>
+    <p id="sarga-filter-count" class="text-xs text-[var(--muted)]">Showing all {kanda.sargas.length} sargas</p>
+  </section>
+
+  <details class="mb-7 rounded-xl border border-[var(--border)] bg-[var(--surface)]/45 px-4 py-3">
+    <summary class="cursor-pointer select-none text-xs font-semibold uppercase tracking-wider text-[var(--muted)] hover:text-[var(--accent)]">
+      Quick-jump grid (Sargas 1–{kanda.sargas.length})
+    </summary>
+    <div class="mt-3 grid gap-1.5" style="grid-template-columns: repeat(auto-fill, minmax(2.85rem, 1fr));">
+      {kanda.sargas.map((s) => (
+        <a
+          href={sargaUrl(kanda.slug, s.n)}
+          class="rounded border border-[var(--border)] bg-[var(--bg)] py-1.5 text-center text-xs font-medium tabular-nums text-[var(--ink)] no-underline transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent)]"
+        >
+          {s.n}
+        </a>
+      ))}
+    </div>
+  </details>
+
+  <ol id="sarga-list" class="divide-y divide-[var(--border)]">
     {kanda.sargas.map((s) => (
-      <li class="py-3">
+      <li class="py-3" data-sarga-n={s.n} data-search={`${s.n} sarga ${s.n} ${s.preview.toLowerCase()}`}>
         <a href={sargaUrl(kanda.slug, s.n)} class="group flex flex-col gap-1 no-underline sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
           <div class="flex items-baseline gap-3">
-            <span class="w-20 shrink-0 font-semibold text-[var(--accent)] group-hover:underline">
+            <span class="w-20 shrink-0 font-semibold tabular-nums text-[var(--accent)] group-hover:underline">
               Sarga {s.n}
             </span>
             <span class="text-sm text-[var(--ink)]">{s.preview}</span>
           </div>
-          <div class="flex shrink-0 items-center gap-3 text-xs text-[var(--muted)]">
+          <div class="flex shrink-0 items-center gap-3 text-xs tabular-nums text-[var(--muted)]">
             <span>{s.verses} vv.</span>
-            <span>{s.en === 'ocr_unreviewed' ? 'EN OCR' : s.en === 'community_verified' ? 'EN verified' : s.en === 'see_sarga' ? 'EN merged' : 'EN missing'}</span>
+            <span class="rounded border border-[var(--border)] bg-[var(--surface)]/70 px-1.5 py-0.5 text-[11px]">
+              {s.en === 'ocr_unreviewed' ? 'EN prose' : s.en === 'community_verified' ? 'EN verified' : s.en === 'see_sarga' ? 'EN merged' : 'Sanskrit only'}
+            </span>
           </div>
         </a>
       </li>
@@ -64,9 +114,33 @@ const baseUrl = withBase('');
 
   <script is:inline define:vars={{ BASE: baseUrl, SLUG: kanda.slug, TOTAL: kanda.sargas.length }}>
     (function () {
+      // Live sarga filter
+      var filterInput = document.getElementById('sarga-filter');
+      var countEl = document.getElementById('sarga-filter-count');
+      var listItems = Array.from(document.querySelectorAll('#sarga-list > li'));
+      if (filterInput) {
+        filterInput.addEventListener('input', function () {
+          var q = filterInput.value.trim().toLowerCase();
+          var visible = 0;
+          listItems.forEach(function (li) {
+            var hay = li.getAttribute('data-search') || '';
+            var match = !q || hay.indexOf(q) !== -1;
+            li.hidden = !match;
+            if (match) visible++;
+          });
+          if (countEl) {
+            countEl.textContent = q
+              ? visible + ' of ' + TOTAL + ' sargas matching "' + filterInput.value.trim() + '"'
+              : 'Showing all ' + TOTAL + ' sargas';
+          }
+        });
+      }
+
+      // Offline Kanda download controller
       var CACHE_NAME = 'vr-kanda-' + SLUG;
       var dlBtn = document.getElementById('dl-btn');
       var rmBtn = document.getElementById('rm-btn');
+      var progEl = document.getElementById('dl-progress');
       var statusEl = document.getElementById('dl-status');
 
       if (!('caches' in window)) {
@@ -88,10 +162,14 @@ const baseUrl = withBase('');
             }
           } catch {}
         }
+        if (progEl) {
+          progEl.value = sargaCount;
+          progEl.classList.toggle('hidden', sargaCount === 0);
+        }
         if (sargaCount > 0) {
           statusEl.textContent = sargaCount + ' / ' + TOTAL + ' sargas offline' + estText;
           rmBtn.classList.remove('hidden');
-          dlBtn.textContent = sargaCount >= TOTAL ? 'Refresh offline copy' : 'Resume offline download';
+          dlBtn.textContent = sargaCount >= TOTAL ? 'Refresh offline copy' : 'Resume download';
         } else {
           statusEl.textContent = 'Not cached offline' + estText;
           rmBtn.classList.add('hidden');
@@ -101,11 +179,13 @@ const baseUrl = withBase('');
 
       dlBtn.addEventListener('click', async function () {
         dlBtn.disabled = true;
+        if (progEl) progEl.classList.remove('hidden');
         try {
           statusEl.textContent = 'Fetching manifest…';
           var res = await fetch(BASE + 'offline/' + SLUG + '.json');
           var data = await res.json();
           var urls = data.urls || [];
+          if (progEl) progEl.max = urls.length;
           var cache = await caches.open(CACHE_NAME);
           var done = 0;
           var idx = 0;
@@ -119,7 +199,8 @@ const baseUrl = withBase('');
                 if (r.ok) await cache.put(u, r);
               } catch {}
               done++;
-              statusEl.textContent = done + ' / ' + urls.length;
+              if (progEl) progEl.value = done;
+              statusEl.textContent = done + ' / ' + urls.length + ' pages cached…';
             }
           }
           await Promise.all(Array.from({ length: conc }, worker));

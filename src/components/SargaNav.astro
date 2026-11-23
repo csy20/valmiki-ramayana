@@ -12,22 +12,22 @@ interface Props {
 
 const { kandaSlug, kandaName, prev, next, position } = Astro.props;
 ---
-<nav aria-label={`Sarga navigation (${position})`} class="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
+<nav aria-label={`Sarga navigation (${position})`} class="flex flex-wrap items-center justify-between gap-2 text-sm">
   <div class="min-w-0">
     {prev ? (
       <a
         href={sargaUrl(prev.slug, prev.sarga)}
         data-nav-prev={position === 'top' ? 'true' : undefined}
-        class="inline-flex items-center gap-1.5 rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 font-medium no-underline hover:border-[var(--accent)]"
+        class="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-[var(--surface)]/70 px-3 py-1.5 text-xs font-medium text-[var(--ink)] no-underline transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)] sm:text-sm"
       >
         <span>&larr;</span>
         <span>{prev.slug === kandaSlug ? `Sarga ${prev.sarga}` : `${prev.kandaName} ${prev.sarga}`}</span>
       </a>
     ) : (
-      <span class="text-[var(--muted)]">Beginning</span>
+      <span class="text-xs text-[var(--muted)]">Beginning</span>
     )}
   </div>
-  <a href={kandaUrl(kandaSlug)} class="font-medium no-underline hover:underline">
+  <a href={kandaUrl(kandaSlug)} class="text-xs font-medium text-[var(--muted)] no-underline hover:text-[var(--accent)] hover:underline sm:text-sm">
     {kandaName} Index
   </a>
   <div class="min-w-0">
@@ -36,13 +36,13 @@ const { kandaSlug, kandaName, prev, next, position } = Astro.props;
         href={sargaUrl(next.slug, next.sarga)}
         data-nav-next={position === 'top' ? 'true' : undefined}
         data-astro-prefetch="load"
-        class="inline-flex items-center gap-1.5 rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 font-medium no-underline hover:border-[var(--accent)]"
+        class="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-[var(--surface)]/70 px-3 py-1.5 text-xs font-medium text-[var(--ink)] no-underline transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)] sm:text-sm"
       >
         <span>{next.slug === kandaSlug ? `Sarga ${next.sarga}` : `${next.kandaName} ${next.sarga}`}</span>
         <span>&rarr;</span>
       </a>
     ) : (
-      <span class="text-[var(--muted)]">End</span>
+      <span class="text-xs text-[var(--muted)]">End</span>
     )}
   </div>
 </nav>

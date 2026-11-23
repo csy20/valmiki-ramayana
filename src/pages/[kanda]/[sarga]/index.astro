@@ -32,90 +32,158 @@ const doc = getSarga(kanda.slug, sargaN);
 const { prev, next } = getPrevNextSarga(kanda.slug, sargaN);
 const hasHindi = doc.verses.some((v) => Boolean(v.hi));
 const allHiVerified = hasHindi && doc.verses.every((v) => v.hi_verified);
+const hasVerseEn = doc.verses.some((v) => Boolean(v.en));
 const currentPath = sargaUrl(kanda.slug, sargaN);
 const lastTitle = `${kanda.name_iast} · Sarga ${sargaN}`;
 const feedbackHref = FEEDBACK_FORM_URL
   ? `${FEEDBACK_FORM_URL}${FEEDBACK_FORM_URL.includes('?') ? '&' : '?'}sarga=${kanda.n}.${sargaN}`
   : `${withBase('sources/')}#corrections`;
 ---
-<Base title={`${kanda.name_iast} ${kanda.n}.${sargaN}`}>
-  <div class="mb-4 border-b border-[var(--border)] pb-4">
-    <p class="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
-      <a href={kandaUrl(kanda.slug)} class="no-underline hover:underline">
-        <span class="deva">{kanda.name_sa}</span> &middot; {kanda.name_iast} &middot; {kanda.name_en}
-      </a>
-    </p>
-    <h1 class="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
-      Sarga {sargaN} &middot; <span class="deva font-semibold text-[var(--accent)]">सर्गः {intToDeva(sargaN)}</span>
-    </h1>
-    <p class="mt-1 text-xs text-[var(--muted)]">
-      {doc.verses.length} shlokas &middot; Sanskrit Wikisource rev. {doc.sa_source.revid}
-    </p>
-  </div>
+<Base title={`${kanda.name_iast} ${kanda.n}.${sargaN}`} showProgress={true}>
+  <div
+    id="reader-root"
+    class="mx-auto max-w-3xl"
+    data-slug={kanda.slug}
+    data-kanda={kanda.n}
+    data-kanda-name={kanda.name_iast}
+    data-sarga={sargaN}
+    data-title={lastTitle}
+    data-path={currentPath}
+  >
+    <header class="mb-4 border-b border-[var(--border)] pb-4">
+      <div class="flex flex-wrap items-baseline justify-between gap-2">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
+            <a href={kandaUrl(kanda.slug)} class="text-[var(--muted)] no-underline hover:text-[var(--accent)] hover:underline">
+              <span class="deva">{kanda.name_sa}</span> &middot; {kanda.name_iast}
+            </a>
+          </p>
+          <h1 class="mt-1 flex flex-wrap items-baseline gap-x-2.5 text-2xl font-bold tracking-tight sm:text-3xl">
+            <button
+              type="button"
+              data-open-jump
+              class="inline-flex cursor-pointer items-baseline gap-2 border-0 bg-transparent p-0 text-left font-bold text-[var(--ink)] hover:text-[var(--accent)]"
+              title="Jump to another Sarga or Shloka (g)"
+            >
+              <span>Sarga {sargaN}</span>
+              <span class="deva font-semibold text-[var(--accent)]">सर्गः {intToDeva(sargaN)}</span>
+              <span class="text-sm font-normal text-[var(--muted)]" aria-hidden="true">&#9662;</span>
+            </button>
+          </h1>
+        </div>
 
-  <SargaNav kandaSlug={kanda.slug} kandaName={kanda.name_iast} prev={prev} next={next} position="top" />
-  <ReaderControls />
+        <div class="sarga-extra flex items-center gap-2 text-xs">
+          {prev && (
+            <a
+              href={sargaUrl(prev.slug, prev.sarga)}
+              data-nav-prev="true"
+              class="rounded-md border border-[var(--border)] bg-[var(--surface)]/70 px-2.5 py-1.5 font-medium text-[var(--ink)] no-underline hover:border-[var(--accent)] hover:text-[var(--accent)]"
+            >
+              &larr; {prev.slug === kanda.slug ? prev.sarga : `${prev.kandaName} ${prev.sarga}`}
+            </a>
+          )}
+          {next && (
+            <a
+              href={sargaUrl(next.slug, next.sarga)}
+              data-nav-next="true"
+              data-astro-prefetch="load"
+              class="rounded-md border border-[var(--border)] bg-[var(--surface)]/70 px-2.5 py-1.5 font-medium text-[var(--ink)] no-underline hover:border-[var(--accent)] hover:text-[var(--accent)]"
+            >
+              {next.slug === kanda.slug ? next.sarga : `${next.kandaName} ${next.sarga}`} &rarr;
+            </a>
+          )}
+        </div>
+      </div>
 
-  <p class="hi-notice mb-5 rounded border border-[var(--border)] bg-[var(--surface)]/70 px-3 py-2 text-xs text-[var(--muted)]">
-    {hasHindi
-      ? (allHiVerified
-          ? 'हिन्दी अनुवाद समुदाय द्वारा सत्यापित है (CC0)।'
-          : 'Hindi lines (हिन्दी) are unreviewed CC0 machine drafts generated strictly from the Sanskrit shlokas.')
-      : 'Hindi translation drafts are pending offline IndicTrans2 generation from the public-domain Sanskrit text.'}
-  </p>
+      <details class="sarga-extra mt-2.5 text-xs text-[var(--muted)]">
+        <summary class="cursor-pointer select-none list-none hover:text-[var(--ink)]">
+          <span>{doc.verses.length} shlokas</span>
+          <span class="hi-notice">
+            {' '}&middot;{' '}
+            {hasHindi
+              ? (allHiVerified ? 'Hindi verified (CC0)' : 'Hindi draft (CC0)')
+              : 'Hindi pending'}
+          </span>
+          <span class="mx-1.5">&middot;</span>
+          <span class="underline decoration-dotted">Edition notes</span>
+        </summary>
+        <p class="mt-2 rounded-md border border-[var(--border)] bg-[var(--surface)]/60 px-3 py-2 leading-relaxed">
+          Sanskrit from Wikisource (rev. {doc.sa_source.revid}); IAST derived deterministically.{' '}
+          {hasHindi
+            ? (allHiVerified
+                ? 'Hindi translations on this sarga are community-verified (CC0).'
+                : 'Hindi lines are unreviewed CC0 drafts grounded strictly in the public-domain Sanskrit shlokas and M. N. Dutt prose.')
+            : 'Hindi shloka drafts for this sarga are pending so no unverified machine hallucinations are displayed.'}
+          {hasVerseEn && ' Per-shloka English lines are CC0 translations grounded in the public-domain Sanskrit and M. N. Dutt (1891) prose.'}
+        </p>
+      </details>
+    </header>
 
-  <div class="reader-grid">
-    <section id="verses" aria-label="Verses" class="measure">
+    <ReaderControls />
+
+    <section id="verses" aria-label="Verses">
       {doc.verses.map((v) => (
         <Verse verse={v} />
       ))}
     </section>
 
-    <aside id="en" lang="en" aria-label="English prose translation" class="measure rounded-lg border border-[var(--border)] bg-[var(--surface)]/45 p-5 sm:p-6">
-      <header class="mb-4 border-b border-[var(--border)] pb-3">
-        <h2 class="text-base font-semibold">English Prose</h2>
-        <p class="mt-0.5 text-xs text-[var(--muted)]">{formatEnSourceLabel(doc.en.source)}</p>
-        {doc.en.covers && doc.en.covers.length > 1 && (
-          <p class="mt-1 text-xs font-medium text-[var(--accent)]">
-            Covers Sargas {doc.en.covers[0]}–{doc.en.covers[doc.en.covers.length - 1]} (merged in source OCR).
+    {hasVerseEn ? (
+      doc.en.paragraphs.length > 0 && (
+        <details id="en" lang="en" class="sarga-extra mt-10 border-t border-[var(--border)] pt-5">
+          <summary class="cursor-pointer select-none text-xs font-semibold uppercase tracking-wider text-[var(--muted)] hover:text-[var(--accent)]">
+            Original 1891 M. N. Dutt continuous prose ({doc.en.paragraphs.length} paragraphs)
+          </summary>
+          <p class="mt-2 text-xs text-[var(--muted)]">{formatEnSourceLabel(doc.en.source)}</p>
+          <div class="mt-4 space-y-4 text-[0.96em] leading-relaxed">
+            {doc.en.paragraphs.map((p, idx) => (
+              <p id={`en-${idx + 1}`}>{p}</p>
+            ))}
+          </div>
+        </details>
+      )
+    ) : (
+      <section id="en" lang="en" aria-label="English prose translation" class="mt-12 pt-2">
+        <header class="mb-5">
+          <p class="ornament-rule text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">
+            English Prose
+          </p>
+          <p class="mt-2 text-center text-xs text-[var(--muted)]">{formatEnSourceLabel(doc.en.source)}</p>
+          {doc.en.covers && doc.en.covers.length > 1 && (
+            <p class="mt-1.5 text-center text-xs font-medium text-[var(--accent)]">
+              Covers Sargas {doc.en.covers[0]}–{doc.en.covers[doc.en.covers.length - 1]} (merged in source OCR).
+            </p>
+          )}
+        </header>
+        {doc.en.paragraphs.length > 0 ? (
+          <div class="space-y-4 text-[0.98em] leading-relaxed">
+            {doc.en.paragraphs.map((p, idx) => (
+              <p id={`en-${idx + 1}`}>{p}</p>
+            ))}
+          </div>
+        ) : doc.en.status === 'see_sarga' && doc.en.ref ? (
+          <p class="text-sm text-[var(--muted)]">
+            English prose for this sarga is included in <a href={sargaUrl(kanda.slug, doc.en.ref)}>Sarga {doc.en.ref}</a> (section heading omitted in 1891–1894 OCR).
+          </p>
+        ) : (
+          <p class="text-sm text-[var(--muted)]">
+            English prose is not available for this sarga in the current M. N. Dutt OCR alignment.
           </p>
         )}
-      </header>
-      {doc.en.paragraphs.length > 0 ? (
-        <div class="space-y-4 text-[0.97em] leading-relaxed">
-          {doc.en.paragraphs.map((p, idx) => (
-            <p id={`en-${idx + 1}`}>{p}</p>
-          ))}
-        </div>
-      ) : doc.en.status === 'see_sarga' && doc.en.ref ? (
-        <p class="text-sm text-[var(--muted)]">
-          English prose for this sarga is included in <a href={sargaUrl(kanda.slug, doc.en.ref)}>Sarga {doc.en.ref}</a> (section heading omitted in 1891–1894 OCR).
-        </p>
-      ) : (
-        <p class="text-sm text-[var(--muted)]">
-          English prose is not available for this sarga in the current M. N. Dutt OCR alignment.
-        </p>
-      )}
-    </aside>
-  </div>
+      </section>
+    )}
 
-  <div class="mt-8 border-t border-[var(--border)] pt-4">
-    <SargaNav kandaSlug={kanda.slug} kandaName={kanda.name_iast} prev={prev} next={next} position="bottom" />
-    <p class="mt-4 text-center text-xs text-[var(--muted)]">
-      Spot a typo in this sarga?{' '}
-      <a
-        href={feedbackHref}
-        target={FEEDBACK_FORM_URL ? '_blank' : undefined}
-        rel={FEEDBACK_FORM_URL ? 'noopener noreferrer' : undefined}
-      >
-        Let us know
-      </a>.
-    </p>
+    <div class="mt-10 border-t border-[var(--border)] pt-5">
+      <SargaNav kandaSlug={kanda.slug} kandaName={kanda.name_iast} prev={prev} next={next} position="bottom" />
+      <p class="mt-5 text-center text-xs text-[var(--muted)]">
+        Spot a typo in this sarga?{' '}
+        <a
+          href={feedbackHref}
+          target={FEEDBACK_FORM_URL ? '_blank' : undefined}
+          rel={FEEDBACK_FORM_URL ? 'noopener noreferrer' : undefined}
+        >
+          Let us know
+        </a>.
+      </p>
+    </div>
   </div>
-
-  <script is:inline define:vars={{ SLUG: kanda.slug, SARGA: sargaN, TITLE: lastTitle, PATH: currentPath }}>
-    try {
-      localStorage.setItem('vr:last', JSON.stringify({ slug: SLUG, sarga: SARGA, title: TITLE, path: PATH }));
-    } catch {}
-  </script>
 </Base>

@@ -1,16 +1,31 @@
 ---
 import { withBase } from '../lib/url';
 ---
-<header class="border-b border-[var(--border)] bg-[var(--surface)]/70">
-  <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-6">
-    <a href={withBase('')} class="flex items-baseline gap-2.5 text-[var(--ink)] no-underline hover:text-[var(--accent)]">
-      <span class="deva text-lg font-semibold">वाल्मीकिरामायणम्</span>
-      <span class="text-base font-semibold tracking-tight">Vālmīki Rāmāyaṇa</span>
+<header class="top-bar">
+  <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
+    <a href={withBase('')} class="flex items-baseline gap-2 text-[var(--ink)] no-underline hover:text-[var(--accent)]">
+      <span class="deva text-lg font-semibold text-[var(--accent)]">वाल्मीकिरामायणम्</span>
+      <span class="hidden text-sm font-semibold tracking-tight sm:inline">Vālmīki Rāmāyaṇa</span>
     </a>
-    <nav aria-label="Primary" class="flex flex-wrap items-center gap-5 text-sm font-medium">
-      <a href={withBase('search/')} class="no-underline hover:underline">Search</a>
-      <a href={withBase('offline/')} class="no-underline hover:underline">Offline</a>
-      <a href={withBase('sources/')} class="no-underline hover:underline">Sources</a>
+    <nav aria-label="Primary" class="flex items-center gap-3 text-sm font-medium sm:gap-5">
+      <button
+        type="button"
+        data-open-jump
+        class="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-[var(--border)] bg-[var(--surface)]/75 px-2.5 py-1 text-xs font-medium text-[var(--ink)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
+        title="Jump to Kāṇḍa, Sarga, or Shloka (g)"
+      >
+        <span>Jump</span>
+        <kbd class="hidden rounded border border-[var(--border)] bg-[var(--bg)] px-1 font-mono text-[10px] text-[var(--muted)] sm:inline">g</kbd>
+      </button>
+      <a href={withBase('search/')} class="text-[var(--ink)] no-underline hover:text-[var(--accent)]">
+        Search
+      </a>
+      <a href={withBase('offline/')} class="text-[var(--muted)] no-underline hover:text-[var(--accent)]">
+        Offline
+      </a>
+      <a href={withBase('sources/')} class="text-[var(--muted)] no-underline hover:text-[var(--accent)]">
+        Sources
+      </a>
     </nav>
   </div>
 </header>

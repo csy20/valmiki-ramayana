@@ -39,7 +39,7 @@ for (const kanda of indexData.kandas) {
 
     for (const v of sargaDoc.verses) {
       const iast = v.iast ?? Sanscript.t(v.sa, 'devanagari', 'iast');
-      const content = [v.sa, iast, foldDiacritics(iast), v.hi ?? '']
+      const content = [v.sa, iast, foldDiacritics(iast), v.hi ?? '', v.en ?? '']
         .filter(Boolean)
         .join(' ');
       const res = await index.addCustomRecord({

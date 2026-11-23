@@ -112,6 +112,9 @@ for (const kanda of index.kandas) {
       if (v.hi_source !== 'pending' && (typeof v.hi !== 'string' || !v.hi.trim())) {
         fail(`${kanda.slug}/${pad}.json v${v.n}: non-pending hi_source requires non-empty hi string`);
       }
+      if (v.en !== undefined && v.en !== null && (typeof v.en !== 'string' || !v.en.trim())) {
+        fail(`${kanda.slug}/${pad}.json v${v.n}: optional en must be a non-empty string or null`);
+      }
       if (v.hi_source !== 'pending') countedHiGenerated += 1;
       if (v.hi_verified) countedHiVerified += 1;
     }

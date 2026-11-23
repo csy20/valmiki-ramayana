@@ -8,26 +8,26 @@ import { withBase } from '../lib/url';
 interface Props {
   title?: string;
   description?: string;
+  showProgress?: boolean;
 }
 
-const { title, description = SITE_DESCRIPTION } = Astro.props;
+const { title, description = SITE_DESCRIPTION, showProgress = false } = Astro.props;
 const pageTitle = title ? `${title} · ${SITE_TITLE}` : SITE_TITLE;
 const baseUrl = withBase('');
-const isProd = import.meta.env.PROD;
 ---
 <!doctype html>
-<html lang="en">
+<html lang="en" data-base={baseUrl}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#a3471a" />
+    <meta name="theme-color" content="#faf6ee" />
     <link rel="icon" type="image/svg+xml" href={withBase('icon.svg')} />
     <link rel="manifest" href={withBase('manifest.webmanifest')} />
     <script is:inline>
       (function () {
-        var p = { sa: true, iast: true, hi: true, en: true, theme: 'paper', size: 'md' };
+        var p = { sa: true, iast: true, hi: true, en: true, theme: 'paper', size: 'md', focus: false };
         try {
           var raw = localStorage.getItem('vr:prefs');
           if (raw) Object.assign(p, JSON.parse(raw));
@@ -38,41 +38,28 @@ const isProd = import.meta.env.PROD;
         if (p.iast === false) r.classList.add('hide-iast');
         if (p.hi === false) r.classList.add('hide-hi');
         if (p.en === false) r.classList.add('hide-en');
+        if (p.focus === true) r.classList.add('focus-mode');
       })();
     </script>
   </head>
   <body class="flex min-h-screen flex-col antialiased">
+    {showProgress && <div class="read-progress" aria-hidden="true"></div>}
     <a href="#main" class="skip-link">Skip to content</a>
     <Header />
-    <main id="main" class="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
+    <main id="main" class="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
       <slot />
     </main>
     <Footer />
-    <script is:inline define:vars={{ BASE: baseUrl, PROD: isProd }}>
-      if (PROD && 'serviceWorker' in navigator) {
-        window.addEventListener('load', function () {
-          navigator.serviceWorker.register(BASE + 'sw.js', { scope: BASE }).catch(function () {});
-        });
-      }
-      document.addEventListener('keydown', function (e) {
-        if (e.metaKey || e.ctrlKey || e.altKey) return;
-        var el = document.activeElement;
-        if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable)) {
-          return;
-        }
-        if (e.key === '/') {
-          e.preventDefault();
-          var q = document.getElementById('search-q');
-          if (q) q.focus();
-          else window.location.href = BASE + 'search/';
-        } else if (e.key === 'ArrowLeft') {
-          var prev = document.querySelector('[data-nav-prev]');
-          if (prev) window.location.href = prev.getAttribute('href');
-        } else if (e.key === 'ArrowRight') {
-          var next = document.querySelector('[data-nav-next]');
-          if (next) window.location.href = next.getAttribute('href');
-        }
-      });
-    </script>
+
+    <dialog id="jump-dialog" class="vr-dialog" aria-labelledby="jump-title"></dialog>
+
+    <button id="exit-focus-btn" type="button" class="exit-focus-pill">
+      <span>Exit Focus</span>
+      <kbd class="rounded border border-[var(--border)] bg-[var(--bg)] px-1 font-mono text-[10px]">f</kbd>
+    </button>
+
+    <div id="vr-toast" role="status" aria-live="polite" class="vr-toast" hidden></div>
+
+    <script src="../scripts/site.ts"></script>
   </body>
 </html>

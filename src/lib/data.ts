@@ -44,6 +44,7 @@ export interface VerseEntry {
   hi_source: 'pending' | 'generated_from_pd_v1' | 'community_verified';
   hi_verified: boolean;
   hi_flag?: string;
+  en?: string | null;
 }
 
 export interface SargaDoc {

@@ -8,28 +8,30 @@ const kandaFilters = index.kandas.map((k) => ({
   label: `${k.name_iast} (${k.name_en})`,
   value: k.name_en.replace(/\s+Kanda$/, ''),
 }));
+const starterQueries = ['राम', 'rāma', 'sita', 'अयोध्या', 'hanuman', 'dharma', 'तपस्या'];
 const baseUrl = withBase('');
 ---
 <Base title="Search">
-  <section class="measure">
-    <h1 class="text-3xl font-bold tracking-tight">Search the Rāmāyaṇa</h1>
-    <p class="mt-2 text-sm text-[var(--muted)]">
-      Client-side static search across all {index.totals.verses.toLocaleString()} shlokas (Devanagari, IAST, ASCII-folded IAST, Hindi drafts) and M. N. Dutt English prose. Press <kbd class="rounded border border-[var(--border)] px-1.5 py-0.5 text-xs">/</kbd> anywhere to jump here.
+  <section class="mx-auto max-w-3xl">
+    <p class="text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">Full-Text Concordance</p>
+    <h1 class="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">Search the Rāmāyaṇa</h1>
+    <p class="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+      Instant client-side search across all {index.totals.verses.toLocaleString()} shlokas (Devanagari, IAST, ASCII-folded IAST, Hindi drafts) and M. N. Dutt’s English prose.
     </p>
 
-    <form id="search-form" class="mt-6 flex flex-col gap-3 sm:flex-row" onsubmit="return false;">
+    <form id="search-form" class="mt-6 flex flex-col gap-2.5 sm:flex-row" onsubmit="return false;">
       <label class="sr-only" for="search-q">Search query</label>
       <input
         id="search-q"
         type="search"
         placeholder="Search राम, rāma, rama, Ayodhya, Kaikeyi…"
         autocomplete="off"
-        class="flex-1 rounded-md border border-[var(--border)] bg-[var(--bg)] px-3.5 py-2 text-base text-[var(--ink)] placeholder:text-[var(--muted)]"
+        class="flex-1 rounded-lg border border-[var(--border-strong)] bg-[var(--bg)] px-4 py-2.5 text-base text-[var(--ink)] placeholder:text-[var(--muted)]"
       />
       <label class="sr-only" for="search-kanda">Filter by Kāṇḍa</label>
       <select
         id="search-kanda"
-        class="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--ink)]"
+        class="rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3.5 py-2.5 text-sm text-[var(--ink)]"
       >
         <option value="">All Kāṇḍas</option>
         {kandaFilters.map((kf) => (
@@ -38,12 +40,27 @@ const baseUrl = withBase('');
       </select>
     </form>
 
-    <p id="search-status" class="mt-4 text-sm text-[var(--muted)]">Type a word or phrase to search.</p>
-    <ol id="search-results" class="mt-4 divide-y divide-[var(--border)]"></ol>
+    <div class="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
+      <span class="mr-1 text-[var(--muted)]">Try:</span>
+      {starterQueries.map((term) => (
+        <button
+          type="button"
+          data-starter={term}
+          class="cursor-pointer rounded-full border border-[var(--border)] bg-[var(--surface)]/75 px-2.5 py-1 text-[var(--ink)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
+        >
+          {term}
+        </button>
+      ))}
+    </div>
+
+    <p id="search-status" class="mt-5 border-b border-[var(--border)] pb-2.5 text-xs font-medium uppercase tracking-wider text-[var(--muted)]">
+      Type a word or choose a sample query above.
+    </p>
+    <ol id="search-results" class="mt-2 divide-y divide-[var(--border)]"></ol>
     <button
       id="search-more"
       type="button"
-      class="mt-6 hidden cursor-pointer rounded border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-medium hover:border-[var(--accent)]"
+      class="mt-6 hidden cursor-pointer rounded-md border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2 text-sm font-medium text-[var(--ink)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
     >
       Load more results
     </button>
@@ -92,15 +109,35 @@ const baseUrl = withBase('');
         var loaded = await Promise.all(slice.map(function (r) { return r.data(); }));
         loaded.forEach(function (item) {
           var li = document.createElement('li');
-          li.className = 'py-3.5';
+          li.className = 'py-4';
+
+          var topRow = document.createElement('div');
+          topRow.className = 'flex flex-wrap items-center gap-2';
+
           var a = document.createElement('a');
           a.href = normalizeHref(item.url);
-          a.className = 'font-semibold text-[var(--accent)] hover:underline';
+          a.className = 'font-semibold text-[var(--accent)] no-underline hover:underline';
           a.textContent = (item.meta && item.meta.title) || item.url;
+          topRow.appendChild(a);
+
+          var isEnglish = String(item.url || '').indexOf('#en-') !== -1;
+          var badge = document.createElement('span');
+          badge.className = 'rounded border border-[var(--border)] bg-[var(--surface)] px-1.5 py-0.5 text-[11px] font-medium text-[var(--muted)]';
+          badge.textContent = isEnglish ? 'English Prose' : 'Shloka';
+          topRow.appendChild(badge);
+
+          if (item.meta && item.meta.kanda) {
+            var kBadge = document.createElement('span');
+            kBadge.className = 'rounded border border-[var(--border)] px-1.5 py-0.5 text-[11px] text-[var(--muted)]';
+            kBadge.textContent = item.meta.kanda;
+            topRow.appendChild(kBadge);
+          }
+
           var p = document.createElement('p');
-          p.className = 'mt-1 text-sm text-[var(--muted)]';
+          p.className = 'mt-1.5 text-sm leading-relaxed text-[var(--muted)]';
           p.innerHTML = item.excerpt || '';
-          li.appendChild(a);
+
+          li.appendChild(topRow);
           li.appendChild(p);
           listEl.appendChild(li);
         });
@@ -124,7 +161,7 @@ const baseUrl = withBase('');
         shownCount = 0;
 
         if (!q) {
-          statusEl.textContent = 'Type a word or phrase to search.';
+          statusEl.textContent = 'Type a word or choose a sample query above.';
           return;
         }
 
@@ -133,13 +170,13 @@ const baseUrl = withBase('');
           var pf = await ensurePagefind();
           var opts = kanda ? { filters: { kanda: [kanda] } } : {};
           var folded = fold(q);
-          var searches = [pf.debouncedSearch(q, opts, 180)];
+          var searches = [pf.debouncedSearch(q, opts, 160)];
           if (folded && folded !== q) {
             searches.push(pf.search(folded, opts));
           }
           var responses = await Promise.all(searches);
           if (mySeq !== seq) return;
-          if (!responses[0]) return; // debounced out
+          if (!responses[0]) return;
 
           var merged = [];
           var seen = new Set();
@@ -158,7 +195,7 @@ const baseUrl = withBase('');
             statusEl.textContent = 'No matches for "' + q + '".';
             return;
           }
-          statusEl.textContent = activeResults.length + ' result' + (activeResults.length === 1 ? '' : 's') + ' for "' + q + '"';
+          statusEl.textContent = activeResults.length.toLocaleString() + ' result' + (activeResults.length === 1 ? '' : 's') + ' for "' + q + '"';
           await renderNextChunk();
         } catch (err) {
           statusEl.textContent = 'Search index is built during production build (`npm run build`).';
@@ -168,6 +205,14 @@ const baseUrl = withBase('');
       inputEl.addEventListener('input', runSearch);
       filterEl.addEventListener('change', runSearch);
       moreBtn.addEventListener('click', renderNextChunk);
+
+      document.querySelectorAll('[data-starter]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          inputEl.value = btn.getAttribute('data-starter') || '';
+          inputEl.focus();
+          runSearch();
+        });
+      });
 
       var params = new URLSearchParams(window.location.search);
       if (params.get('q')) {
